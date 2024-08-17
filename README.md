@@ -55,16 +55,16 @@ Make sure you have the following installed:
 - [Cloudinary Account](https://cloudinary.com/)
 
 
-<img src="/public//pages/login.png" width="200" alt="preview" />
-<img src="/public//pages/register.png" width="200" alt="preview" />
-<img src="/public//pages/home.png" width="200" alt="preview" />
-<img src="/public//pages/AddChatRoom.png" width="200" alt="preview" />
-<img src="/public//pages/ChatRoom.png" width="200" alt="preview" />
-<img src="/public//pages/AddMembersRequest.png" width="200" alt="preview" />
-<img src="/public//pages/SendInvitation.png" width="200" alt="preview" />
-<img src="/public//pages/AcceptInvite.png" width="200" alt="preview" />
-<img src="/public//pages/RoomSetting.png" width="200" alt="preview" />
-<img src="/public//pages/Profile.png" width="200" alt="preview" />
+<img src="/public//pages/login.png" alt="preview" />
+<img src="/public//pages/register.png"  alt="preview" />
+<img src="/public//pages/home.png" alt="preview" />
+<img src="/public//pages/AddChatRoom.png" alt="preview" />
+<img src="/public//pages/ChatRoom.png"  alt="preview" />
+<img src="/public//pages/AddMembersRequest.png"  alt="preview" />
+<img src="/public//pages/SendInvitation.png"  alt="preview" />
+<img src="/public//pages/AcceptInvite.png"  alt="preview" />
+<img src="/public//pages/RoomSetting.png"  alt="preview" />
+<img src="/public//pages/Profile.png"  alt="preview" />
 
 
 ### Frontend Setup
