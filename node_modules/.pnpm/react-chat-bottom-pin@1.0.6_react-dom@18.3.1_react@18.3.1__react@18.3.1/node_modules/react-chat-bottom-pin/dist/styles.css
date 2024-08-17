@@ -1,0 +1,30 @@
+.react-chat-bottom-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    padding: 0 16%;
+}
+
+.react-chat-bottom-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.react-chat-bottom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.react-chat-bottom-scroll::-webkit-scrollbar-thumb {
+    background: #0000003d;
+    border-radius: 5px;
+    visibility: hidden
+}
+
+
+.react-chat-bottom-scroll:hover {
+    scrollbar-width: thin;
+}
+
+.react-chat-bottom-scroll:hover::-webkit-scrollbar-thumb {
+    visibility: visible;
+}

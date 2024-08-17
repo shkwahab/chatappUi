@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .message-container {
+        position: relative;
+        margin-bottom: 20px; /* Add some margin to separate messages */
+      }
+      
+      .popup {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        display: none; /* Hidden by default */
+      }
+      
+      .popup-show {
+        display: block;
+      }
+      
+      .popup-bottom {
+        bottom: 100%; /* Position the popup above the message */
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 10px;
+      }
+      
+      .popup-top {
+        top: 100%; /* Position the popup below the message */
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 10px;
+      }
+      
+}
