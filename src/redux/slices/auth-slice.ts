@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Auth } from "../../apis/types";
+import { Auth } from "@/apis/types";
 
 
 

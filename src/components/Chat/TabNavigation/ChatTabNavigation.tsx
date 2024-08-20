@@ -2,26 +2,32 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useState, useRef, useEffect } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
-import { getNextRoomPage, getRoomDetail, getUserRooms } from '../../../apis/rooms.api';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../../redux/store';
-import { Rooms, SingleRoom } from '../../../apis/types';
+import { getNextRoomPage, getRoomDetail, getUserRooms } from '@/apis/rooms.api';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { Rooms, SingleRoom } from '@/apis/types';
 import { TbSocial } from "react-icons/tb";
 import { HiUserGroup } from "react-icons/hi";
-import AddChatPopup from '../../../utils/Popup';
-import AddRoomModal from './AddRoomModal';
-import { handleSelectRoom } from '../../../redux/slices/room-slice';
+import AddChatPopup from '@/utils/Popup';
+import AddRoomModal from '@/components/Chat/TabNavigation/AddRoomModal';
 
-const ChatTabNavigation = () => {
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-    const [addChatInfo, setAddChatInfo] = useState<boolean>(false);
+
+interface ChatTabNavigationProps {
+    setCurrentRoom: (room: SingleRoom) => void
+    room: SingleRoom
+}
+const ChatTabNavigation: React.FC<ChatTabNavigationProps> = ({ setCurrentRoom, room }) => {
+
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
-    const room: SingleRoom = useSelector((state: RootState) => state.room)
-
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const dispatch = useDispatch<AppDispatch>()
-
     const [rooms, setRooms] = useState<Rooms>({
         count: 0,
         next: null,
@@ -110,8 +116,9 @@ const ChatTabNavigation = () => {
     })
 
     useEffect(() => {
-        if (roomData)
-            dispatch(handleSelectRoom(roomData))
+        if (roomData) {
+            setCurrentRoom(roomData)
+        }
     }, [roomData])
 
 
@@ -150,32 +157,43 @@ const ChatTabNavigation = () => {
 
     return (
         <React.Fragment>
-            <div className="  p-4 flex items-center w-full justify-between">
+            <div className="   p-4 flex items-center w-full justify-between">
                 <div className='text-xl text-gray-800'>Chats</div>
                 <div onClick={() => setAddChatToggle(true)} className='cursor-pointer relative'>
-                    <FaPlus
-                        onMouseOver={() => setAddChatInfo(true)}
-                        onMouseLeave={() => setAddChatInfo(false)}
-                        className='text-primary text-xl hover:bg-primary hover:text-white transition-all duration-300 bg-gray-100 p-1 rounded-md'
-                    />
-                    <div className={`${addChatInfo ? "" : "hidden"} absolute -left-14 z-20 text-sm rounded-md bg-black text-white p-2`}>
-                        Add Chat
-                    </div>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <FaPlus
+                                    className='text-primary text-xl hover:bg-primary hover:text-white transition-all duration-300 bg-gray-100 p-1 rounded-md'
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent className=' bg-gray-800 text-white outline-none border-none'>
+                                <p>Add Chat</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+
+
                 </div>
             </div>
 
             <div className="h-full">
                 <div className="px-4">
-                    <div className='flex flex-row-reverse justify-between px-4  my-4 rounded-md p-2 bg-gray-800 text-white items-center'>
-                        <IoMdSearch className='text-xl' />
-                        <input
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            type="text"
-                            name="search"
-                            id="search"
-                            className='bg-transparent outline-none placeholder:text-gray-400'
-                            placeholder='Search'
-                        />
+                    <div className='flex  justify-between   my-4 rounded-md p-2 bg-gray-800 text-white items-center px-4 space-x-2'>
+                        <div>
+                            <IoMdSearch className='text-xl  text-white' />
+                        </div>
+                        <div>
+                            <input
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                type="text"
+                                name="search"
+                                id="search"
+                                className='bg-transparent w-[80%] outline-none placeholder:text-gray-400'
+                                placeholder='Search'
+                            />
+                        </div>
                     </div>
                 </div>
                 <div className="p-4 flex relative  z-[99999] items-center  space-x-8 md:justify-start md:space-x-2">
@@ -213,7 +231,7 @@ const ChatTabNavigation = () => {
                                         )
                                     }
                                     {item.img !== "" &&
-                                        <img className='w-8 h-8 rounded-full' src={item.img} alt={item.name} />
+                                        <img className='w-8 object-cover object-center h-8 mr-1 rounded-full' src={item.img} alt={item.name} />
                                     }
                                 </div>
                                 <div className="flex flex-col w-full space-y-0">
@@ -224,10 +242,10 @@ const ChatTabNavigation = () => {
                                         </div>
                                     </div>
                                     <div className="flex justify-between">
-                                        <div className='text-sm pb-1'>{item.lastMessage?.message.slice(0,40)}  {item.lastMessage?.message&& item.lastMessage?.message.length>40&&"... "}</div>
-                                        <div className={`text-xs pb-1 ${item.unread===0?"hidden":""} bg-primary p-1 px-2  rounded-full text-white`}>{item.unread}</div>
-                                        <div className={` ${(item.actions>0 ||item.unread<1)?"":"hidden"} ${item?.actions>0?"bg-yellow-500":"hidden"} text-xs p-1 text-white px-2 rounded-full`}>
-                                            {item.actions>0&&item.actions}
+                                        <div className='text-sm pb-1'>{item.lastMessage?.message.slice(0, 40)}  {item.lastMessage?.message && item.lastMessage?.message.length > 40 && "... "}</div>
+                                        <div className={`text-xs pb-1 ${item.unread === 0 ? "hidden" : ""} bg-primary p-1 px-2  rounded-full text-white`}>{item.unread}</div>
+                                        <div className={` ${((item.actions > 0 && room.room.adminId === authCtx?.user?.id) || item.unread < 1) ? "" : "hidden"} ${item?.actions > 0 ? "bg-yellow-500" : "hidden"} text-xs p-1 text-white px-2 rounded-full`}>
+                                            {item.actions > 0 && item.actions}
                                         </div>
                                     </div>
                                 </div>

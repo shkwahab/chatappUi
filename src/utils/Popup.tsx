@@ -36,7 +36,7 @@ const Popup: React.FC<PopupProps> = ({ isOpen, onClose, title, children }) => {
         <div className="fixed z-[99999] -inset-10 md:-inset-2  flex items-center justify-center bg-black bg-opacity-50">
             <div ref={popupRef} className="bg-white   rounded-lg shadow-lg relative">
                 <div className={`p-4 text-white bg-primary flex rounded-t-lg items-center justify-between ${title ? "block" : "hidden"}`}>
-                    <div className='text-white'>
+                    <div className=' font-medium text-white'>
                         {title}
                     </div>
                     <button

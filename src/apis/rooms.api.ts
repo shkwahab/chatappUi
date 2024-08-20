@@ -1,5 +1,6 @@
-import { AcceptInvitationUri, AcceptRequestUri, AddRoomsRequestUri, baseApi, BlockMemberUri, CreateRoomUri, DeleteInvitationUri, GetAllRooms, GetSingleRoomUri, GetUserRoomsUri, SendInvitationUri, UpdateRoomUri } from "./apiHelper";
-import { AcceptInvitationDto, AcceptRequestDto, AddRoomsRequestDto, BlockMemberDto, CreateRoomDto, RejectInvitationDto, SendInvitationDto, UpdateRoomDto } from "./types";
+import { AcceptInvitationUri, AcceptRequestUri, AddRoomsRequestUri, baseApi, BlockMemberUri, CreateRoomUri, DeleteInvitationUri, GetAllRooms, GetSingleRoomUri, GetUserRoomsUri, LeaveGroupUri, SendInvitationUri, UpdateRoomUri } from "@/apis/apiHelper";
+import { AcceptInvitationDto, AcceptRequestDto, AddRoomsRequestDto, BlockMemberDto, CreateRoomDto, LeaveGroupDto, RejectInvitationDto, SendInvitationDto, UpdateRoomDto } from "@/apis/types";
+import { BlockMemberDto as unBlockMemberDto } from "@/apis/types";
 
 export const getAllRooms = async () => {
     const res = await baseApi.get(GetAllRooms)
@@ -57,12 +58,23 @@ export const sendInvitation = async (sendInvitationDto: SendInvitationDto) => {
     return res.data
 }
 
-export const blockMember = async (blockMemberDto: BlockMemberDto) => {
-    const res = await baseApi.patch(BlockMemberUri, blockMemberDto)
-    return res.data
+export const blockMember = async ({ adminId, blockMemberDto }: { adminId: string, blockMemberDto: BlockMemberDto }) => {
+    const res = await baseApi.patch(BlockMemberUri + adminId, blockMemberDto);
+    return res.data;
+}
+
+export const unBlockMember = async ({ adminId, unBlockMemberDto }: { adminId: string, unBlockMemberDto: unBlockMemberDto }) => {
+    const res = await baseApi.patch(BlockMemberUri + adminId, unBlockMemberDto);
+    return res.data;
 }
 
 export const rejectInvitation = async (rejectInvitationDto: RejectInvitationDto) => {
     const res = await baseApi.delete(DeleteInvitationUri + "/" + rejectInvitationDto.adminId + "/" + rejectInvitationDto.roomId + "/" + rejectInvitationDto.userId)
+    return res.data
+}
+
+
+export const leaveRoom = async (leaveGroupDto: LeaveGroupDto) => {
+    const res = await baseApi.patch(LeaveGroupUri, leaveGroupDto)
     return res.data
 }

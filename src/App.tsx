@@ -1,8 +1,8 @@
 import React from "react"
-import Routing from "./routes/Routing"
+import Routing from "@/routes/Routing"
 import { PersistGate } from 'redux-persist/integration/react'
 import { Provider } from "react-redux"
-import store, { persistor } from "./redux/store"
+import store, { persistor } from "@/redux/store"
 import {
   QueryClient,
   QueryClientProvider,

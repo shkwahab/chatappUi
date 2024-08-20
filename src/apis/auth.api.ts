@@ -1,5 +1,5 @@
-import { baseApi, GetUserUri, LoginUri, RegisterUri } from "./apiHelper"
-import { CreateUserDto, login } from "./types"
+import { baseApi, GetUserUri, LoginUri, RegisterUri } from "@/apis//apiHelper"
+import { CreateUserDto, login } from "@/apis/types"
 
 
 export const loginFunc = async (body: login) => {

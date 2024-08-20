@@ -1,21 +1,16 @@
 import React, { FormEvent } from 'react'
-import { SingleRoom } from '../../../apis/types'
+import { SingleRoom } from '@/apis/types'
 import { useMutation } from '@tanstack/react-query'
-import { deleteRoom } from '../../../apis/rooms.api'
-import { showErrorNotification, showSuccessNotification } from '../../../utils/notifcation'
-import { queryClient } from '../../../App'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from '../../../redux/store'
-import { clearRoom } from '../../../redux/slices/room-slice'
+import { deleteRoom } from '@/apis/rooms.api'
+import { showErrorNotification } from '@/utils/notifcation'
+import { queryClient } from '@/App'
 
 interface DeleteRoomProps {
   room: SingleRoom,
   onclose: () => void
+  setCurrentRoom: (room: SingleRoom) => void
 }
-const DeleteRoomModal: React.FC<DeleteRoomProps> = ({ room, onclose }) => {
-  const dispatch = useDispatch<AppDispatch>()
-
-
+const DeleteRoomModal: React.FC<DeleteRoomProps> = ({ room, onclose, setCurrentRoom }) => {
   const mutate = useMutation({
     mutationKey: ["deleteRoom"],
     mutationFn: async (id: string) => {
@@ -23,13 +18,18 @@ const DeleteRoomModal: React.FC<DeleteRoomProps> = ({ room, onclose }) => {
       return res
     },
     onSuccess: () => {
-      showSuccessNotification("Chat Room Deleted Successfully")
       queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
-      dispatch(clearRoom())
+      setCurrentRoom({
+        ...room,
+        room: {
+          ...room.room,
+          deletedAt: new Date()
+        }
+      })
       onclose()
     },
     onError: () => {
-      showErrorNotification("Failed to Delete Room")
+      showErrorNotification("Failed to Delete Room. Something went wrong")
     }
   })
 
@@ -46,7 +46,7 @@ const DeleteRoomModal: React.FC<DeleteRoomProps> = ({ room, onclose }) => {
       <form onSubmit={DeleteRoom} className="p-4 w-[250px] md:w-[400px]">
         <div className='flex flex-col space-y-2'>
           <div>
-            Would you like to delete the room? 
+            Would you like to delete the room?
           </div>
 
         </div>

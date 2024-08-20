@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
-import { Auth } from '../apis/types';
+import { RootState } from '@/redux/store';
+import { Auth } from '@/apis/types';
 import { useNavigate } from 'react-router-dom';
 
 const ProtectedRoutes = ({ children }: Readonly<{

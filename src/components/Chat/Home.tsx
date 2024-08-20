@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { signOut } from '../../redux/slices/auth-slice';
-import { HomeProps, SingleRoom, Widgets } from '../../apis/types';
+import { useDispatch } from 'react-redux';
+import { signOut } from '@/redux/slices/auth-slice';
+import { HomeProps, SingleRoom, Widgets } from '@/apis/types';
 import { MdOutlineChat } from "react-icons/md";
 import { FaRegUserCircle } from "react-icons/fa";
 import { MdChatBubbleOutline } from "react-icons/md";
@@ -9,19 +9,75 @@ import { HiUserGroup } from "react-icons/hi2";
 import { TbSocial } from "react-icons/tb";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { LiaSignOutAltSolid } from "react-icons/lia";
-import ChatSplashScreen from './ChatSplashScreen';
-import TabNavigation from "./TabNavigation"
-import { AppDispatch, RootState } from '../../redux/store';
-import ChatScreen from './ChatScreen';
-import RoomDetailSidebar from './TabNavigation/RoomDetailSidebar';
-import Popup from '../../utils/Popup';
-import AddMembersModal from './TabNavigation/AddMembersModal';
-import UpdateRoomModal from './TabNavigation/UpdateRoomModal';
-import DeleteRoomModal from './TabNavigation/DeleteRoomModal';
-import ImagePopup from './ImagePopup';
+import ChatSplashScreen from '@/components/Chat/ChatSplashScreen';
+import TabNavigation from "@/components/Chat/TabNavigation"
+import { AppDispatch } from '@/redux/store';
+import ChatScreen from '@/components/Chat/ChatScreen';
+import RoomDetailSidebar from '@/components/Chat/TabNavigation/RoomDetailSidebar';
+import Popup from '@/utils/Popup';
+import AddMembersModal from '@/components/Chat/TabNavigation/AddMembersModal';
+import UpdateRoomModal from '@/components/Chat/TabNavigation/UpdateRoomModal';
+import DeleteRoomModal from '@/components/Chat/TabNavigation/DeleteRoomModal';
+import ImagePopup from '@/components/Chat/ImagePopup';
+import LeaveRoom from '@/components/Chat/TabNavigation/LeaveRoom';
+import LeavePopup from "@/utils/Popup"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+
+
+export const initialRoom: SingleRoom = {
+  room: {
+    id: "",
+    name: "",
+    adminId: "",
+    isPublic: false,
+    img: "",
+    createdAt: new Date(),
+    updatedAt: null,
+    deletedAt: null
+  },
+  users: [{
+    id: "",
+    email: "",
+    img: "",
+    name: "",
+    username: "",
+    createdAt: new Date(),
+    updatedAt: null,
+    roomMemberships: {
+      createdAt: null,
+      userId: ""
+    }
+  }],
+  actions: [],
+  blockMembers: [{
+    id: "",
+    username: ""
+  }],
+  oldUsers: [
+    {
+      user: {
+        id: "",
+        username: ""
+      },
+      deletedAt: null,
+    }
+  ]
+}
 const Home: React.FC<HomeProps> = ({ user }) => {
-  const [activeInfoTab, setActiveInfoTab] = useState(0)
+
   const [imageModalToggle, setImageModalToggle] = useState<boolean>(false)
   const [image, setImage] = useState<{
     img: string,
@@ -30,15 +86,19 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     img: "",
     alt: ""
   })
+  const [isLeaveRoom, setIsLeaveRoom] = useState<boolean>(false)
   const [profileWidgetToggle, setProfileWidgetToggle] = useState<boolean>(false)
-  const [activeTabInfo, setActiveTabInfo] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState(2)
   const [invitePopup, setInvitationPopup] = useState<boolean>(false)
   const dispatch = useDispatch<AppDispatch>()
   const [updateRoomPopup, setUpdateRoomPopup] = useState<boolean>(false)
   const [deleteRoomPopup, setDeleteRoomPopup] = useState<boolean>(false)
   const [showRoomDetailsTab, setShowRoomDetailsTab] = useState<boolean>(false)
-  const room: SingleRoom = useSelector((state: RootState) => state.room)
+  const [currentRoom, setCurrentRoom] = useState<SingleRoom>(initialRoom)
+
+  const handleLeaveRoom = () => {
+    setIsLeaveRoom(!isLeaveRoom)
+  }
 
   const profileWidgets: Widgets[] = [
     {
@@ -72,89 +132,125 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     },
   ]
 
-  const tabsInfo = [
-    {
-      id: 1,
-      name: "profile"
-    },
-    {
-      id: 2,
-      name: "chats"
-    },
-    {
-      id: 3,
-      name: "groups"
-    },
-    {
-      id: 4,
-      name: "channels"
-    },
-
-  ]
-
   const navigationTabs = [
     {
       id: 1,
       name: "profile",
-      icon: <FaRegUserCircle className={`${activeTab === 1 ? "text-primary" : "text-gray-400"}  md:text-3xl  text-2xl  font-semibold`} />
+      icon: <FaRegUserCircle className={`${activeTab === 1 ? "text-primary" : "text-gray-400"}  md:text-3xl  text-3xl  font-semibold`} />
     },
     {
       id: 2,
       name: "chats",
-      icon: <MdChatBubbleOutline className={`${activeTab === 2 ? "text-primary" : "text-gray-400"} text-2xl  md:text-3xl   font-semibold`} />
+      icon: <MdChatBubbleOutline className={`${activeTab === 2 ? "text-primary" : "text-gray-400"} text-3xl  md:text-3xl   font-semibold`} />
     },
     {
       id: 3,
       name: "groups",
-      icon: <HiUserGroup className={`${activeTab === 3 ? "text-primary" : "text-gray-400"} md:text-3xl  text-2xl  font-semibold`} />
+      icon: <HiUserGroup className={`${activeTab === 3 ? "text-primary" : "text-gray-400"} md:text-3xl  text-3xl  font-semibold`} />
     },
     {
       id: 4,
       name: "channels",
-      icon: <TbSocial className={` ${activeTab === 4 ? "text-primary" : "text-gray-400"} md:text-3xl  text-2xl  font-semibold`} />
+      icon: <TbSocial className={` ${activeTab === 4 ? "text-primary" : "text-gray-400"} md:text-3xl  text-3xl  font-semibold`} />
     }
   ]
 
-
-  const handleProfileToggle = () => {
-    setProfileWidgetToggle(!profileWidgetToggle)
+  const handleSelectRoom = (room: SingleRoom) => {
+    setCurrentRoom(room)
   }
 
   return (
     <React.Fragment>
-      <aside id="navigation-sidebar" className={`fixed bottom-0 md:top-0 left-0 z-10 w-full md:w-16 md:h-screen transition-transform md:translate-x-0 ${room.room.id != "" ? "hidden md:block" : ""}`} aria-label="Sidebar">
-        <div className="h-full relative py-4 overflow-hidden bg-gray-700">
+      <aside id="navigation-sidebar" className={`fixed bottom-0 md:top-0 left-0 z-[100] w-full md:w-16 md:h-screen transition-transform md:translate-x-0 ${currentRoom.room.id != "" ? "hidden md:block" : ""}`} aria-label="Sidebar">
+        <div className="h-full md:flex-col justify-between relative py-4   overflow-hidden bg-gray-700">
           <ul className='flex p-4 space-x-8 md:space-x-0 md:space-y-10 md:flex-col items-center'>
-            <MdOutlineChat className='text-primary text-3xl md:text-3xl font-semibold' />
+            <MdOutlineChat className='text-primary text-4xl md:text-3xl mr-1 md:mr-0 font-semibold' />
             {navigationTabs.map((item) => {
               return (
-                <li onClick={() => setActiveTab(item.id)} className="relative cursor-pointer" onMouseOver={() => {
-                  setActiveInfoTab(item.id);
-                  setActiveTabInfo(true);
-                }} onMouseLeave={() => {
-                  setActiveInfoTab(0);
-                  setActiveTabInfo(false);
-                }} key={item.id}>
-                  <p>{item.icon}</p>
-                  <div className={`absolute hidden -right-6 w-1 top-0 h-8 bg-primary ${item.id === activeTab ? "md:block" : "md:hidden"}`} />
-                </li>
+                <TooltipProvider >
+                  <Tooltip >
+                    <TooltipTrigger>
+                      <li onClick={() => setActiveTab(item.id)} className='  cursor-pointer'>
+                        {item.icon}
+                      </li>
+                    </TooltipTrigger>
+                    <TooltipContent className='absolute ml-6 bg-gray-800 text-white outline-none border-none -mt-10 md:block hidden '>
+                      <p className=' capitalize' >{item.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
               );
             })}
           </ul>
 
-          {/* For Mobile */}
-          <ul className="md:hidden font-medium absolute right-10 bottom-4">
-            <li onClick={handleProfileToggle} className="cursor-pointer">
-              <img src={user?.img} alt={user?.name} className="w-8 h-8 rounded-full" />
-            </li>
-          </ul>
+          {/* Bottom section for Profile (Mobile & Desktop) */}
+          <div className="flex justify-center  md:flex-col md:-mt-12 md:items-end md:h-full   w-full">
+            {/* Mobile profile image */}
+            <ul className="md:hidden font-medium absolute right-10 bottom-8">
+              <li className="cursor-pointer">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className=' outline-none w-full'>
+                    <img src={user?.img} alt={user?.name} className=" w-8 h-8 rounded-full mx-auto" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className=' -top-48 -left-40 absolute z-[999999]'>
+                    {profileWidgets.filter((widget) => widget.name).map((item) => {
+                      return <DropdownMenuItem key={item.id}> <li className=' list-none cursor-pointer' onClick={() => {
+                        if (item.logout) {
+                          dispatch(signOut())
+                        }
+                        setActiveTab(item.id)
+                        setProfileWidgetToggle(!profileWidgetToggle)
+                      }} key={item.id}>
+                        <ul className="flex  w-[180px] justify-between">
+                          <li className=''>
+                            {item.name}
+                          </li>
+                          <li>
+                            {item.icon}
+                          </li>
+                        </ul>
+                      </li>
+                      </DropdownMenuItem>
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            </ul>
 
-          {/* For Desktop */}
-          <ul className="hidden md:flex font-medium justify-center">
-            <li onClick={handleProfileToggle} className="cursor-pointer absolute bottom-4 w-full text-center">
-              <img src={user?.img} alt={user?.name} className="w-8 h-8 rounded-full mx-auto" />
-            </li>
-          </ul>
+            {/* Desktop profile image */}
+            <ul className="hidden md:block w-full relative    ">
+              <li className="cursor-pointer w-full">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className=' outline-none w-full'>
+                    <img src={user?.img} alt={user?.name} className=" w-8 h-8 rounded-full mx-auto" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className=' -top-48 left-4 absolute z-[999999]'>
+                    {profileWidgets.filter((widget) => widget.name).map((item) => {
+                      return <DropdownMenuItem key={item.id}> <li className=' list-none cursor-pointer' onClick={() => {
+                        if (item.logout) {
+                          dispatch(signOut())
+                        }
+                        setActiveTab(item.id)
+                        setProfileWidgetToggle(!profileWidgetToggle)
+                      }} key={item.id}>
+                        <ul className="flex  w-[180px] justify-between">
+                          <li className=''>
+                            {item.name}
+                          </li>
+                          <li>
+                            {item.icon}
+                          </li>
+                        </ul>
+                      </li>
+                      </DropdownMenuItem>
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+              </li>
+            </ul>
+          </div>
         </div>
       </aside>
 
@@ -163,8 +259,8 @@ const Home: React.FC<HomeProps> = ({ user }) => {
       <aside id="activeTab-sidebar" className="fixed top-0  w-full  md:bg-white  z-5 md:z-40 md:ml-16 md:w-80 md:h-screen " aria-label="Sidebar">
         <div className="h-full w-full  overflow-y-auto overflow-x-hidden ">
           <ul className="space-y-2  font-medium">
-            <div className={`${room.room.id != "" ? "hidden md:block" : ""}`}>
-              <TabNavigation activeTab={activeTab} />
+            <div className={`${currentRoom.room.id != "" ? "hidden md:block" : ""}`}>
+              <TabNavigation room={currentRoom} setCurrentRoom={handleSelectRoom} activeTab={activeTab} />
             </div>
           </ul>
         </div>
@@ -173,13 +269,15 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 
 
       {/* chats */}
-      <div className=' h-screen md:ml-[380px] bg-gray-100'>
+      <div className=' h-screen md:ml-[380px] overflow-hidden  bg-gray-100'>
         <React.Fragment>
-          {room.room.id != "" ?
+          {currentRoom.room.id != "" ?
             <React.Fragment>
-              <ChatScreen openRoomDetailTab={() => {
-                setShowRoomDetailsTab(true);
-              }} room={room} />
+              <ChatScreen
+                setCurrentRoom={handleSelectRoom}
+                openRoomDetailTab={() => {
+                  setShowRoomDetailsTab(true);
+                }} room={currentRoom} />
             </React.Fragment> :
             <div className='hidden md:block'>
               <ChatSplashScreen />
@@ -192,6 +290,9 @@ const Home: React.FC<HomeProps> = ({ user }) => {
       <aside id="activeTab-sidebar" className={`fixed top-0 right-0 bg-white z-40  transition-transform duration-300 overflow-y-auto w-full md:w-80 h-screen transform ${showRoomDetailsTab ? "  " : "hidden "} `} aria-label="Sidebar">
         <div className="h-full w-full overflow-y-auto overflow-x-hidden ">
           <RoomDetailSidebar
+            room={currentRoom}
+            setLeaveRoom={handleLeaveRoom}
+            setCurrentRoom={handleSelectRoom}
             onAdd={() => {
               setInvitationPopup(true)
             }}
@@ -214,71 +315,40 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 
         </div>
       </aside>
-
-
-      {/* navigation guide icons widgets */}
-      {activeTabInfo &&
-        <div className=' hidden md:fixed md:top-[70px] md:left-8 z-[100] md:block  md:h-screen'>
-          <div className="flex  space-x-4 md:flex-col md:space-y-8 items-center">
-            {tabsInfo.map((item) => {
-              return <div key={item.id} className={`relative pr-3 bg-black text-sm text-white p-2 rounded-md ${activeInfoTab == item.id ? "" : "invisible"}`}>
-                <p className='capitalize'>{item.name}</p>
-                <div className='absolute -left-[18px] top-2 -z-10' style={{
-                  width: "0",
-                  height: "0",
-                  borderTop: "10px solid transparent",
-                  borderRight: "20px solid #000",
-                  borderBottom: "10px solid transparent",
-                  borderLeft: "10px solid transparent"
-                }}></div>
-              </div>
-            })}
-
-
-
-          </div>
-
-        </div>
-      }
-      {/* profile widget */}
-      {
-
-        profileWidgetToggle &&
-        <ul className='  pr-8  flex flex-col space-y-2   bg-gray-50 shadow-md rounded-md absolute p-4 bottom-20 md:bottom-14 md:right-auto right-4 md:left-4 z-[99999]  ' id="profileWidget">
-          {profileWidgets.filter((widget) => widget.name).map((item) => {
-            return <li className=' cursor-pointer' onClick={() => {
-              if (item.logout) {
-                dispatch(signOut())
-              }
-              setActiveTab(item.id)
-              setProfileWidgetToggle(!profileWidgetToggle)
-            }} key={item.id}>
-              <ul className="flex  w-[180px] justify-between">
-                <li className=''>
-                  {item.name}
-                </li>
-                <li>
-                  {item.icon}
-                </li>
-              </ul>
-            </li>
-          })}
-        </ul>
-
-      }
+      <LeavePopup
+        isOpen={isLeaveRoom}
+        onClose={handleLeaveRoom}
+        title="Leave Group"
+      >
+        <LeaveRoom
+          leaveRoomDto={{
+            roomId: currentRoom.room.id,
+            userId: user?.id as string
+          }}
+          setCurrentRoom={handleSelectRoom}
+          close={() => {
+            setIsLeaveRoom(!isLeaveRoom)
+          }}
+        />
+      </LeavePopup>
 
       <Popup children={<React.Fragment>
-        <AddMembersModal roomId={room.room.id} close={() => { setInvitationPopup(false) }} />
+        <AddMembersModal
+          room={currentRoom} close={() => { setInvitationPopup(false) }} />
       </React.Fragment>} title="Add Members" isOpen={invitePopup} onClose={() => {
         setInvitationPopup(false)
       }} />
       <Popup children={<React.Fragment>
-        <UpdateRoomModal room={room} onClose={() => { setUpdateRoomPopup(false) }} />
+        <UpdateRoomModal
+          setCurrentRoom={handleSelectRoom}
+          room={currentRoom} onClose={() => { setUpdateRoomPopup(false) }} />
       </React.Fragment>} title="Update Chat Room" isOpen={updateRoomPopup} onClose={() => {
         setUpdateRoomPopup(false)
       }} />
       <Popup children={<React.Fragment>
-        <DeleteRoomModal room={room} onclose={() => { setDeleteRoomPopup(false) }} />
+        <DeleteRoomModal
+          setCurrentRoom={handleSelectRoom}
+          room={currentRoom} onclose={() => { setDeleteRoomPopup(false) }} />
       </React.Fragment>} title="Delete Chat Room" isOpen={deleteRoomPopup} onClose={() => {
         setDeleteRoomPopup(false)
       }} />

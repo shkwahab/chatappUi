@@ -3,9 +3,9 @@ import { MdOutlineChat } from "react-icons/md";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { registerUser } from '../../apis/auth.api';
-import { CreateUserDto } from '../../apis/types';
-import { showErrorNotification, showSuccessNotification } from '../../utils/notifcation';
+import { registerUser } from '@/apis/auth.api';
+import { CreateUserDto } from '@/apis/types';
+import { showErrorNotification, showSuccessNotification } from '@/utils/notifcation';
 
 const Register = () => {
   const [togglePassword, setTogglePassword] = useState(false)

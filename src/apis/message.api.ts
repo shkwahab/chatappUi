@@ -1,5 +1,5 @@
-import { baseApi, DeleteMessageUri, EditMessageUri, GetRoomsMessagesUri, ReadMessageUri, SendMessageUri } from "./apiHelper"
-import {  DeleteMessageDto, EditMessageDto, ReadMessageDto, SendMessageDto } from "./types"
+import { baseApi, DeleteMessageUri, EditMessageUri, GetRoomsMessagesUri, ReadMessageUri, SendMessageUri } from "@/apis/apiHelper"
+import {  DeleteMessageDto, EditMessageDto, ReadMessageDto, SendMessageDto } from "@/apis/types"
 
 export const SendMessage = async (sendMessageDto: SendMessageDto) => {
     const res = await baseApi.post(SendMessageUri, sendMessageDto)

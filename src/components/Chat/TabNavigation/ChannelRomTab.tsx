@@ -1,20 +1,21 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { IoMdSearch } from "react-icons/io";
-import { acceptRequest, getAllRooms, getNextRoomPage, getRoomDetail, sendInvitation } from '../../../apis/rooms.api';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../../redux/store';
-import { AcceptRequestDto, Rooms, SendInvitationDto, SingleRoom } from '../../../apis/types';
+import { acceptRequest, getAllRooms, getNextRoomPage, getRoomDetail, sendInvitation } from '@/apis/rooms.api';
+import {  useSelector } from 'react-redux';
+import {  RootState } from '@/redux/store';
+import { AcceptRequestDto, Rooms, SendInvitationDto, SingleRoom } from '@/apis/types';
 import { HiUserGroup } from "react-icons/hi";
-import { handleSelectRoom } from '../../../redux/slices/room-slice';
-import { showErrorNotification } from '../../../utils/notifcation';
-import { queryClient } from '../../../App';
+import { showErrorNotification } from '@/utils/notifcation';
+import { queryClient } from '@/App';
 
-const ChannelRoomTab = () => {
-
+interface ChannelRoomTabProps{
+    room:SingleRoom
+    setCurrentRoom: (room: SingleRoom) => void
+}
+const ChannelRoomTab:React.FC<ChannelRoomTabProps> = ({room,setCurrentRoom}) => {
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
-    const room: SingleRoom = useSelector((state: RootState) => state.room)
     const [acceptRequestDto, setAcceptRequestDto] = useState<AcceptRequestDto>({
         roomId: "",
         userId: ""
@@ -27,7 +28,6 @@ const ChannelRoomTab = () => {
     })
 
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const dispatch = useDispatch<AppDispatch>()
 
     const [rooms, setRooms] = useState<Rooms>({
         count: 0,
@@ -105,7 +105,8 @@ const ChannelRoomTab = () => {
 
     useEffect(() => {
         if (roomData)
-            dispatch(handleSelectRoom(roomData))
+            setCurrentRoom(roomData)
+            // dispatch(handleSelectRoom(roomData))
     }, [roomData])
 
 
@@ -130,6 +131,7 @@ const ChannelRoomTab = () => {
         mutationFn: acceptRequest,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
         },
         onError: (error) => {
             showErrorNotification("Failed to accept request.Something went wrong")
@@ -183,20 +185,23 @@ const ChannelRoomTab = () => {
             <React.Fragment>
 
                 <div className="h-full">
-                    <div className="px-4">
-                        <div className='flex flex-row-reverse justify-between px-4  my-4 rounded-md p-2 bg-gray-800 text-white items-center'>
-                            <IoMdSearch className='text-xl' />
+                <div className="px-4">
+                    <div className='flex  justify-between   my-4 rounded-md p-2 bg-gray-800 text-white items-center px-4 space-x-2'>
+                        <div>
+                            <IoMdSearch className='text-xl  text-white' />
+                        </div>
+                        <div>
                             <input
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 type="text"
                                 name="search"
                                 id="search"
-                                className='bg-transparent outline-none placeholder:text-gray-400'
+                                className='bg-transparent w-[80%] outline-none placeholder:text-gray-400'
                                 placeholder='Search'
                             />
                         </div>
                     </div>
-
+                </div>
 
                     <div className='my-4  py-2 flex space-y-4 flex-col'>
                         {filteredRooms.map((item) => {
@@ -207,7 +212,6 @@ const ChannelRoomTab = () => {
                                 const isMatch = (member.userId === authCtx.user?.id) && member.isApproved === false;
                                 return isMatch;
                             });
-
 
                             return <div onClick={() => {
                                 if (isMemberShip) {

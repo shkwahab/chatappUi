@@ -3,11 +3,11 @@ import { MdOutlineChat } from "react-icons/md";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getUser, loginFunc } from '../../apis/auth.api';
-import { showErrorNotification, showSuccessNotification } from '../../utils/notifcation';
-import { login, LoginResult, User } from '../../apis/types';
+import { getUser, loginFunc } from '@/apis/auth.api';
+import { showErrorNotification, showSuccessNotification } from '@/utils/notifcation';
+import { login, LoginResult, User } from '@/apis/types';
 import { useDispatch } from 'react-redux';
-import { login as loginDispatch } from "../../redux/slices/auth-slice"
+import { login as loginDispatch } from "@/redux/slices/auth-slice"
 
 const Login = () => {
     const dispatch = useDispatch();
@@ -98,7 +98,7 @@ const Login = () => {
                                         <input type="email" id="email" name='email' className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="john.doe@company.com" required />
                                     </div>
                                     <div className='w-[250px] md:w-[400px]'>
-                                        <label className='text-gray-600 font-medium mb-1' htmlFor="password">
+                                        <label className=' text-gray-600 font-medium mb-1' htmlFor="password">
                                             Password
                                         </label>
                                         <div className="flex items-center">

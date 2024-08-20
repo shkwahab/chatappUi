@@ -1,4 +1,4 @@
-import { baseApi, UploadImageUri } from "./apiHelper"
+import { baseApi, UploadImageUri } from "@/apis/apiHelper"
 
 export const uploadImage = async (img: File) => {
     const formData = new FormData();

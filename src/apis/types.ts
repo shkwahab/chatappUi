@@ -101,6 +101,7 @@ type Result = {
     isPublic: boolean
     adminId: string
     updatedAt: Date | null
+    deletedAt?: Date | null
     lastMessage: LastMesage | null
 }
 
@@ -132,6 +133,7 @@ export interface SingleRoom {
         adminId: string
         createdAt: Date
         updatedAt: Date | null
+        deletedAt: Date | null
     },
     users: {
         id: string
@@ -140,7 +142,11 @@ export interface SingleRoom {
         img: string
         email: string
         createdAt: Date
-        updatedAt: Date | null
+        updatedAt: Date | null,
+        roomMemberships: {
+            createdAt: Date | null
+            userId: string
+        }
     }[],
     actions:
     {
@@ -157,7 +163,19 @@ export interface SingleRoom {
             username: string
             img: string
         }
-    }[] | []
+    }[],
+    blockMembers: {
+        id: string
+        username: string
+    }[]
+    | [],
+    oldUsers: {
+        deletedAt: Date | null;
+        user: {
+            id: string;
+            username: string;
+        }
+    }[]
 }
 
 
@@ -249,10 +267,17 @@ export interface SendInvitationDto {
 export interface BlockMemberDto {
     userId: string
     roomId: string
+    isBlocked: boolean
 }
 
 export interface RejectInvitationDto {
     adminId: string
+    userId: string
+    roomId: string
+}
+
+
+export interface LeaveGroupDto {
     userId: string
     roomId: string
 }

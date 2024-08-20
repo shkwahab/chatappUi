@@ -1,28 +1,25 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react';
-import { SingleRoom, UpdateRoomDto } from '../../../apis/types';
+import { SingleRoom, UpdateRoomDto } from '@/apis/types';
 import { TbSocial } from "react-icons/tb";
 import { HiUserGroup } from "react-icons/hi";
 import { MdModeEditOutline } from "react-icons/md";
 import { useMutation } from '@tanstack/react-query';
-import { updateRoom } from '../../../apis/rooms.api';
-import { uploadImage } from '../../../apis/common.api';
-import { showSuccessNotification } from '../../../utils/notifcation';
-import { queryClient } from '../../../App';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../../redux/store';
-import { handleSelectRoom } from '../../../redux/slices/room-slice';
+import { updateRoom } from '@/apis/rooms.api';
+import { uploadImage } from '@/apis/common.api';
+import { showSuccessNotification } from '@/utils/notifcation';
+import { queryClient } from '@/App';
 
 interface UpdateRoomProps {
   room: SingleRoom;
   onClose: () => void;
+  setCurrentRoom: (room: SingleRoom) => void
 }
 
-const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room }) => {
+const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room, setCurrentRoom }) => {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imgUrl, setImgUrl] = useState<string | null>(null);
-  const dispatch = useDispatch<AppDispatch>()
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -77,12 +74,14 @@ const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room }) => {
     }) => {
       const newRoom: SingleRoom = {
         room: res,
-        users: room.users
+        users: room.users,
+        actions: [],
+        blockMembers:room.blockMembers
       }
-      dispatch(handleSelectRoom(newRoom))
+      setCurrentRoom(newRoom)
       showSuccessNotification("Room Updated Successfully")
       queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
-      queryClient.invalidateQueries({queryKey: ["AllRooms"] });
+      queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
 
       onClose()
     },
@@ -90,7 +89,7 @@ const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room }) => {
     onError: (error) => {
       console.log(error)
     },
-    
+
   });
 
   const handleFormSubmit = (e: FormEvent) => {
@@ -113,7 +112,7 @@ const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room }) => {
           updateRoomDto: roomDto,
         };
         mutate.mutateAsync(body);
-        
+
       }
     }
   };
@@ -171,8 +170,8 @@ const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room }) => {
             </div>
           </div>
           <div className='flex justify-end space-x-4 my-10'>
-            <button type="button"  onClick={onClose}>Cancel</button>
-            <button type="submit" disabled={mutate.isPending} className='p-2 bg-primary text-white rounded'>{mutate.isPending || imgMutate.isPending?"Saving":"Save"}</button>
+            <button type="button" onClick={onClose}>Cancel</button>
+            <button type="submit" disabled={mutate.isPending} className='p-2 bg-primary text-white rounded'>{mutate.isPending || imgMutate.isPending ? "Saving" : "Save"}</button>
           </div>
         </form>
       </div>

@@ -1,5 +1,5 @@
-import { baseApi, GetUserUri, UpdateUserUri } from "./apiHelper"
-import { UpdateUserDto } from "./types"
+import { baseApi, GetUserUri, UpdateUserUri } from "@/apis/apiHelper"
+import { UpdateUserDto } from "@/apis/types"
 
 export const GetAllUsers = async () => {
     const res = await baseApi.get(GetUserUri)

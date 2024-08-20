@@ -1,13 +1,13 @@
 import React, { FormEvent, useEffect, useState, useRef } from 'react'
 import Multiselect from 'multiselect-react-dropdown';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { GetAllUsers } from '../../../apis/user.api';
-import { CreateRoomDto, Option, User } from '../../../apis/types';
+import { GetAllUsers } from '@/apis/user.api';
+import { CreateRoomDto, Option, User } from '@/apis/types';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
-import { createRoom } from '../../../apis/rooms.api';
-import { showErrorNotification } from '../../../utils/notifcation';
-import { queryClient } from '../../../App';
+import { RootState } from '@/redux/store';
+import { createRoom } from '@/apis/rooms.api';
+import { showErrorNotification } from '@/utils/notifcation';
+import { queryClient } from '@/App';
 
 
 interface Modal {

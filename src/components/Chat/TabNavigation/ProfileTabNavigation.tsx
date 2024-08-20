@@ -1,17 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../../../redux/store'
+import { AppDispatch, RootState } from '@/redux/store'
 import { useMutation } from '@tanstack/react-query'
-import { uploadImage } from '../../../apis/common.api'
-import { UpdateUser } from '../../../apis/user.api'
-import { Auth, UpdateUserDto } from '../../../apis/types'
-import { login } from "../../../redux/slices/auth-slice"
+import { uploadImage } from '@/apis/common.api'
+import { UpdateUser } from '@/apis/user.api'
+import { Auth, SingleRoom, UpdateUserDto } from '@/apis/types'
+import { login } from "@/redux/slices/auth-slice"
 import { FaCamera } from "react-icons/fa";
 import { MdEdit } from 'react-icons/md'
 import { TiTick } from 'react-icons/ti'
-import { showGuideNotification, showSuccessNotification } from '../../../utils/notifcation'
+import { showGuideNotification, showSuccessNotification } from '@/utils/notifcation'
 
-const ProfileTabNavigation = () => {
+interface ProfileTabNavigationProps {
+  room: SingleRoom
+  setCurrentRoom: (room: SingleRoom) => void
+}
+
+const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCurrentRoom }) => {
   const authCtx = useSelector((state: RootState) => state.authCtx)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isEditing, setIsEditing] = useState({
@@ -58,8 +63,23 @@ const ProfileTabNavigation = () => {
             email: ProfileEdit.email || authCtx.user.email,
           },
         };
-        dispatch(login(newAuthCtx))
+        const newUser = {
+          ...authCtx.user,
+          name: ProfileEdit.name || authCtx.user.name,
+          username: ProfileEdit.username || authCtx.user.username,
+          email: ProfileEdit.email || authCtx.user.email,
+        }
+        const newRoom = {
+          room: room.room,
+          actions: room.actions,
+          users: room.users.map((user) =>
+            user.id === newUser.id ? newUser : user
+          ),
+          blockMembers:room.blockMembers
+        };
+        setCurrentRoom(newRoom)
         showSuccessNotification("Profile updated successfully")
+        dispatch(login(newAuthCtx))
         setIsEditing({ isName: false, isEmail: false, isUserName: false })
       }
     },
@@ -78,10 +98,27 @@ const ProfileTabNavigation = () => {
     onSuccess: async (res: { img: string }) => {
       if (!authCtx?.user?.id) return;
 
-      const body = { id: authCtx.user.id, updateUserDto: { img: res.img } };
+      const updatedUser = { ...authCtx.user, img: res.img };
+
+      const newAuthCtx: Auth = { ...authCtx, user: updatedUser };
+
+      // Update the room data
+      const newRoom = {
+        ...room,
+        users: room.users.map(user => user.id === updatedUser.id ? updatedUser : user)
+      };
+
       try {
-        await updateProfileMutate.mutateAsync(body);
-        dispatch(login({ ...authCtx, user: { ...authCtx.user, img: res.img } }))
+        // Update the user profile on the server
+        await updateProfileMutate.mutateAsync({ id: updatedUser.id, updateUserDto: { img: res.img } });
+
+        // Dispatch the updated user to the global auth context
+        dispatch(login(newAuthCtx));
+
+        // Update the room with the new user data
+        setCurrentRoom(newRoom);
+
+
       } catch (error) {
         console.error("Error updating profile image:", error);
       }
@@ -90,6 +127,7 @@ const ProfileTabNavigation = () => {
       console.error("Failed to upload image:", error);
     },
   });
+
 
   useEffect(() => {
     if (selectedFile) {
@@ -107,7 +145,7 @@ const ProfileTabNavigation = () => {
           src={selectedFile ? URL.createObjectURL(selectedFile) : authCtx.user?.img}
           alt={authCtx.user?.name}
         />
-        <div className="absolute top-16 left-24 z-10 hidden md:block group-hover:block">
+        <div className="absolute top-16 left-24 z-10 hidden md:hidden group-hover:block">
           <FaCamera className="text-8xl text-white" />
         </div>
         <input
@@ -118,6 +156,7 @@ const ProfileTabNavigation = () => {
           style={{ display: "none" }}
         />
       </div>
+   
 
       <div className="flex flex-col p-4">
         <div className="font-normal text-lg mt-2 flex justify-between">

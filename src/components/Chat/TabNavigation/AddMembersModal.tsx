@@ -1,19 +1,19 @@
 import React, { FormEvent, useEffect, useState } from 'react'
 import Multiselect from 'multiselect-react-dropdown';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { GetAllUsers } from '../../../apis/user.api';
-import { AddRoomsRequestDto, Option, User } from '../../../apis/types';
+import { GetAllUsers } from '@/apis/user.api';
+import { AddRoomsRequestDto, Option, SingleRoom, User } from '@/apis/types';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
-import {  showGuideNotification, showSuccessNotification } from '../../../utils/notifcation';
-import { adMemberRequest } from '../../../apis/rooms.api';
+import { RootState } from '@/redux/store';
+import { showGuideNotification, showSuccessNotification } from '@/utils/notifcation';
+import { adMemberRequest } from '@/apis/rooms.api';
 
 
 interface Modal {
     close: () => void,
-    roomId: string
+    room: SingleRoom
 }
-const AddMembersModal: React.FC<Modal> = ({ close, roomId }) => {
+const AddMembersModal: React.FC<Modal> = ({ close, room }) => {
     const authCtx = useSelector((state: RootState) => state.authCtx)
     const myUser = authCtx.user
     const [options, setOptions] = useState<Option[]>([
@@ -28,10 +28,12 @@ const AddMembersModal: React.FC<Modal> = ({ close, roomId }) => {
     }
     useEffect(() => {
         if (members && members.length > 0 && myUser) {
-            const newOptions = members.filter((user) => user.id != myUser.id).map((item) => ({
-                id: item.id,
-                username: item.username,
-            }));
+            const newOptions = members
+            .filter((user) => !room.users.map((item) => item.id).includes(user.id))
+            .map((item) => ({
+              id: item.id,
+              username: item.username,
+            }));          
             setOptions(newOptions);
         }
     }, [members]);
@@ -60,9 +62,9 @@ const AddMembersModal: React.FC<Modal> = ({ close, roomId }) => {
     const handleFormSubmit = async (e: FormEvent) => {
         try {
             e.preventDefault()
-            const sendRequest:AddRoomsRequestDto[] = selectedValue.map((member) => ({
+            const sendRequest: AddRoomsRequestDto[] = selectedValue.map((member) => ({
                 userId: member.id,
-                roomId
+                roomId: room.room.id
             }));
             mutate.mutateAsync(sendRequest)
         } catch (error) {

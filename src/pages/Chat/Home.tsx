@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
-import ChatApp from "../../components/Chat/Home"
+import ChatApp from "@/components/Chat/Home"
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux';
-import { Auth } from '../../apis/types';
-import { RootState } from '../../redux/store';
+import { Auth } from '@/apis/types';
+import { RootState } from '@/redux/store';
 
 const Home = () => {
   const authCtx: Auth = useSelector((state: RootState) => state.authCtx)
