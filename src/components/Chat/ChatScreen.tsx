@@ -29,7 +29,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { initialRoom } from '@/components/Chat/Home'
-
+import { ReadMessageIcon } from "@/assets/ReadMessage"
 
 interface ChatRoomInterfaceProps {
     room: SingleRoom,
@@ -315,7 +315,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
             queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
             queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
             showSuccessNotification("Invitation accepted successfully");
-            const updatedRoom:SingleRoom = await getRoomDetail(acceptInvitationDto.roomId as string)
+            const updatedRoom: SingleRoom = await getRoomDetail(acceptInvitationDto.roomId as string)
             setCurrentRoom(updatedRoom);
         },
         onError: (error) => {
@@ -351,6 +351,12 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
         };
         message: string;
         createdAt: Date;
+        readMessageUser: [] |
+        {
+            id: string
+            username: string
+            img: string
+        }[]
         updatedAt: Date | null
         isSystemMessage?: boolean;
     };
@@ -359,19 +365,19 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
 
     function addJoinAndLeaveMessages(room: SingleRoom, messages: Message[]): Message[] {
         const updatedMessages = [...messages];
-    
+
         const currentUserIds = new Set(room.users.map(user => user.id));
-    
+
         room.oldUsers.forEach(oldUser => {
             const alreadyExists = updatedMessages.some(
                 msg => msg.isSystemMessage && msg.message.includes(oldUser.user.username)
             );
-    
+
             if (!alreadyExists) {
                 const membership = room.users.find(user => user.id === oldUser.user.id)?.roomMemberships;
-    
+
                 const leaveMessageDate = membership?.createdAt || oldUser.deletedAt || new Date();
-    
+
                 updatedMessages.push({
                     id: `leave-${oldUser.user.id}`,
                     sender: {
@@ -387,16 +393,17 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                     createdAt: leaveMessageDate,
                     updatedAt: null,
                     isSystemMessage: true,
+                    readMessageUser: []
                 });
             }
         });
-    
+
         room.users.forEach(user => {
             if (!currentUserIds.has(user.id)) {
                 const alreadyExists = updatedMessages.some(
                     msg => msg.isSystemMessage && msg.message.includes(user.username)
                 );
-    
+
                 if (!alreadyExists) {
                     updatedMessages.push({
                         id: `join-${user.id}`,
@@ -413,11 +420,12 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                         createdAt: new Date(), // You can adjust the date as needed
                         updatedAt: null,
                         isSystemMessage: true,
+                        readMessageUser: []
                     });
                 }
             }
         });
-    
+
         return updatedMessages;
     }
     const RoomMessagesWitheEvents = addJoinAndLeaveMessages(room, RoomMessages?.results || []);
@@ -566,17 +574,67 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                                                     >
                                                         {item.isSystemMessage ? "" : `~${item.sender.name}`}
                                                     </div>
-                                                    <div className={` ${item.sender.id === authCtx.user?.id ? "hidden" : ""} ${item.isSystemMessage && "hidden"}`}>
+                                                    <div className={` flex space-x-2 items-center ${item.sender.id === authCtx.user?.id ? "hidden" : ""} ${item.isSystemMessage && "hidden"}`}>
                                                         {formatTime(item.createdAt)}
+                                                        <div className='ml-4'>
+                                                            <DropdownMenu >
+                                                                <DropdownMenuTrigger className=' outline-none border-none'>
+                                                                    <ReadMessageIcon width={20} height={18} color={"#2563eb"} />
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent className=' outline-none border-none'>
+                                                                    {item.readMessageUser.filter(user => user.id !== item.sender.id as string).map((subItem) => {
+                                                                        return <DropdownMenuItem className=' outline-none border-none' key={subItem.id}>
+                                                                            <div className='flex items-center space-x-2'>
+                                                                                <div>
+                                                                                    <img className='w-8 h-8 object-cover object-center rounded-full' src={subItem.img} alt={subItem.username} />
+                                                                                </div>
+                                                                                <div>
+                                                                                    {subItem.username}
+                                                                                </div>
+                                                                            </div>
+                                                                        </DropdownMenuItem>
+                                                                    })}
+
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div className="">
-                                                    <div>
+                                                    <div >
                                                         {item.message}
                                                     </div>
 
-                                                    <div className={` flex justify-end m-2 mb-0 mt-1 text-xs text-gray-300   ${item.sender.id !== authCtx.user?.id ? "hidden" : ""}`}>{formatTime(item.createdAt)}</div>
+                                                    <div className={` flex ${item.sender.id !== authCtx.user?.id ? "hidden" : ""} space-x-5 items-center justify-end m-2 mb-0 mt-1 text-xs text-gray-300   `}>
+                                                        {formatTime(item.createdAt)}
+                                                        <div className='ml-4'>
+                                                            <DropdownMenu >
+                                                                <DropdownMenuTrigger className=' outline-none border-none'>
+                                                                    <ReadMessageIcon width={20} height={18} color={"#fff"} />
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent className=' outline-none border-none'>
+                                                                    {item.readMessageUser.filter(user => user.id !== authCtx?.user?.id as string).map((subItem) => {
+                                                                        return <DropdownMenuItem className=' outline-none border-none' key={subItem.id}>
+                                                                            <div className='flex items-center space-x-2'>
+                                                                                <div>
+                                                                                    <img className='w-8 h-8 object-cover object-center rounded-full' src={subItem.img} alt={subItem.username} />
+                                                                                </div>
+                                                                                <div>
+                                                                                    {subItem.username}
+                                                                                </div>
+                                                                            </div>
+                                                                        </DropdownMenuItem>
+
+                                                                    })}
+
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+
+                                                        </div>
+                                                    </div>
                                                 </div>
+
                                                 <div className={`absolute  bottom-6 
                                             top-2 right-2 transition-transform duration-300 transform opacity-100 md:opacity-0 group-hover:opacity-100 group-hover:translate-y-2 ${authCtx.user?.id === item.sender.id ? "" : "hidden"}`}>
                                                     <DropdownMenu >

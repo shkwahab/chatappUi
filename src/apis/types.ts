@@ -202,6 +202,12 @@ export type MessageResult = {
     updatedAt: Date | null
     sender: MessageSender
     receiver?: MessageSender
+    readMessageUser: [] |
+    {
+        id: string
+        username: string
+        img:string
+    }[]
 }[]
 
 export interface RoomsMessages {
