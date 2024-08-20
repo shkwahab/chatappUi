@@ -576,14 +576,14 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                                                     </div>
                                                     <div className={` flex space-x-2 items-center ${item.sender.id === authCtx.user?.id ? "hidden" : ""} ${item.isSystemMessage && "hidden"}`}>
                                                         {formatTime(item.createdAt)}
-                                                        <div className='ml-4'>
+                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== item.sender.id as string).length<1&&"hidden"}`}>
                                                             <DropdownMenu >
                                                                 <DropdownMenuTrigger className=' outline-none border-none'>
                                                                     <ReadMessageIcon width={20} height={18} color={"#2563eb"} />
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent className=' outline-none border-none'>
                                                                     {item.readMessageUser.filter(user => user.id !== item.sender.id as string).map((subItem) => {
-                                                                        return <DropdownMenuItem className=' outline-none border-none' key={subItem.id}>
+                                                                        return <DropdownMenuItem className= {`outline-none border-none`} key={subItem.id}>
                                                                             <div className='flex items-center space-x-2'>
                                                                                 <div>
                                                                                     <img className='w-8 h-8 object-cover object-center rounded-full' src={subItem.img} alt={subItem.username} />
@@ -608,7 +608,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
 
                                                     <div className={` flex ${item.sender.id !== authCtx.user?.id ? "hidden" : ""} space-x-5 items-center justify-end m-2 mb-0 mt-1 text-xs text-gray-300   `}>
                                                         {formatTime(item.createdAt)}
-                                                        <div className='ml-4'>
+                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== authCtx?.user?.id as string).length<1&&"hidden"}`}>
                                                             <DropdownMenu >
                                                                 <DropdownMenuTrigger className=' outline-none border-none'>
                                                                     <ReadMessageIcon width={20} height={18} color={"#fff"} />
