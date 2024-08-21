@@ -176,29 +176,32 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
             console.error(error)
         }
     }
-  
 
-  
-const revalidater=async()=>{
-    // @ts-ignore
-    const pagenumber = Math.ceil(initialRooms?.count  / 10);
-    const fetchedRooms: Rooms = {
-        count: 0,
-        next: null,
-        previous: null,
-        result: [] 
-    };
-    // Concatenate results from each page
-    for (let page = 1; page <= pagenumber; page++) {
-        const roomsData: Rooms = await getNextRoomPage(`/rooms?page=${page}`);
+
+
+    const revalidater = async () => {
         // @ts-ignore
-        fetchedRooms.result.push(...roomsData.result);
-        fetchedRooms.count = roomsData.count;
-        fetchedRooms.next = roomsData.next;
-        fetchedRooms.previous = roomsData.previous;
+        const initialRooms: Rooms = await getAllRooms()
+        if (initialRooms) {
+            const pagenumber = Math.ceil(initialRooms?.count / 10);
+            const fetchedRooms: Rooms = {
+                count: 0,
+                next: null,
+                previous: null,
+                result: []
+            };
+            // Concatenate results from each page
+            for (let page = 1; page <= pagenumber; page++) {
+                const roomsData: Rooms = await getNextRoomPage(`/rooms?page=${page}`);
+                // @ts-ignore
+                fetchedRooms.result.push(...roomsData.result);
+                fetchedRooms.count = roomsData.count;
+                fetchedRooms.next = roomsData.next;
+                fetchedRooms.previous = roomsData.previous;
+            }
+            setRooms(fetchedRooms)
+        }
     }
-    setRooms(fetchedRooms)
-}
 
     useEffect(() => {
         if (authCtx?.token) {
