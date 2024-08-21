@@ -10,6 +10,8 @@ import { BlockMemberDto as UnBlockMemberDto } from '@/apis/types';
 import { useMutation } from '@tanstack/react-query';
 import { blockMember,  getRoomDetail,  unBlockMember } from '@/apis/rooms.api';
 import { queryClient } from '@/App';
+import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
 
 interface RoomSidebarInterface {
     room: SingleRoom
@@ -109,6 +111,19 @@ const RoomDetailSidebar: React.FC<RoomSidebarInterface> = ({ onclose,setLeaveRoo
             console.error(error)
         }
     }
+  
+    useEffect(()=>{
+        if(authCtx?.token as string){
+            const roomsocket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                }
+            })
+            roomsocket.on('blockUnblockMember', () => {
+                // console.log("hahah")
+            });
+        }
+    },[authCtx])
     if (room.room.id != "" && authCtx && authCtx.user && authCtx.user.id)
         return (
             <React.Fragment>

@@ -29,11 +29,11 @@ const AddMembersModal: React.FC<Modal> = ({ close, room }) => {
     useEffect(() => {
         if (members && members.length > 0 && myUser) {
             const newOptions = members
-            .filter((user) => !room.users.map((item) => item.id).includes(user.id))
-            .map((item) => ({
-              id: item.id,
-              username: item.username,
-            }));          
+                .filter((user) => !room.users.map((item) => item.id).includes(user.id))
+                .map((item) => ({
+                    id: item.id,
+                    username: item.username
+                }));
             setOptions(newOptions);
         }
     }, [members]);
@@ -64,7 +64,8 @@ const AddMembersModal: React.FC<Modal> = ({ close, room }) => {
             e.preventDefault()
             const sendRequest: AddRoomsRequestDto[] = selectedValue.map((member) => ({
                 userId: member.id,
-                roomId: room.room.id
+                roomId: room.room.id,
+
             }));
             mutate.mutateAsync(sendRequest)
         } catch (error) {

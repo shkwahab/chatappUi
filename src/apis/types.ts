@@ -88,9 +88,10 @@ type Membership = {
     isApproved: boolean,
     createdAt: Date
     updatedAt: Date
+    deletedAt?: Date | null
 }[]
 
-type Result = {
+export type Result = {
     id: string
     unread: number
     actions: number
@@ -120,6 +121,7 @@ export interface Rooms {
 export interface Option {
     id: string;
     username: string;
+    role?:"ADMIN"|"USER"
 }
 
 
@@ -206,7 +208,7 @@ export type MessageResult = {
     {
         id: string
         username: string
-        img:string
+        img: string
     }[]
 }[]
 
@@ -266,7 +268,8 @@ export interface AcceptInvitationDto {
 export interface SendInvitationDto {
     userId: string
     roomId: string
-    isApproved: boolean
+    isApproved: boolean,
+    role?: "ADMIN" | "USER"
 }
 
 

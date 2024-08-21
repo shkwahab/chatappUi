@@ -2,18 +2,20 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { IoMdSearch } from "react-icons/io";
 import { acceptRequest, getAllRooms, getNextRoomPage, getRoomDetail, sendInvitation } from '@/apis/rooms.api';
-import {  useSelector } from 'react-redux';
-import {  RootState } from '@/redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 import { AcceptRequestDto, Rooms, SendInvitationDto, SingleRoom } from '@/apis/types';
 import { HiUserGroup } from "react-icons/hi";
 import { showErrorNotification } from '@/utils/notifcation';
 import { queryClient } from '@/App';
+import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
 
-interface ChannelRoomTabProps{
-    room:SingleRoom
+interface ChannelRoomTabProps {
+    room: SingleRoom
     setCurrentRoom: (room: SingleRoom) => void
 }
-const ChannelRoomTab:React.FC<ChannelRoomTabProps> = ({room,setCurrentRoom}) => {
+const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom }) => {
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
     const [acceptRequestDto, setAcceptRequestDto] = useState<AcceptRequestDto>({
@@ -106,7 +108,7 @@ const ChannelRoomTab:React.FC<ChannelRoomTabProps> = ({room,setCurrentRoom}) => 
     useEffect(() => {
         if (roomData)
             setCurrentRoom(roomData)
-            // dispatch(handleSelectRoom(roomData))
+        // dispatch(handleSelectRoom(roomData))
     }, [roomData])
 
 
@@ -180,28 +182,59 @@ const ChannelRoomTab:React.FC<ChannelRoomTabProps> = ({room,setCurrentRoom}) => 
         }
     }
 
+    useEffect(() => {
+        if (authCtx?.token) {
+            const socket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                }
+            })
+            socket.connect()
+            socket.on('joinRoom', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('sentInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('acceptInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('sentInvitationRequest', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('acceptRequest', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('rejectInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+            socket.on('blockUnblockMember', () => {
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            });
+        }
+    }, [authCtx])
     if (authCtx && authCtx.user && authCtx.user.id)
         return (
             <React.Fragment>
 
                 <div className="h-full">
-                <div className="px-4">
-                    <div className='flex  justify-between   my-4 rounded-md p-2 bg-gray-800 text-white items-center px-4 space-x-2'>
-                        <div>
-                            <IoMdSearch className='text-xl  text-white' />
-                        </div>
-                        <div>
-                            <input
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                type="text"
-                                name="search"
-                                id="search"
-                                className='bg-transparent w-[80%] outline-none placeholder:text-gray-400'
-                                placeholder='Search'
-                            />
+                    <div className="px-4">
+                        <div className='flex  justify-between   my-4 rounded-md p-2 bg-gray-800 text-white items-center px-4 space-x-2'>
+                            <div>
+                                <IoMdSearch className='text-xl  text-white' />
+                            </div>
+                            <div>
+                                <input
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    type="text"
+                                    name="search"
+                                    id="search"
+                                    className='bg-transparent w-[80%] outline-none placeholder:text-gray-400'
+                                    placeholder='Search'
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
 
                     <div className='my-4  py-2 flex space-y-4 flex-col'>
                         {filteredRooms.map((item) => {

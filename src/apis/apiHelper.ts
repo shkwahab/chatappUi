@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE_API_URL = "http://localhost:8000";
+export const BASE_API_URL = import.meta.env.VITE_BASE_URL;
+export const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
+export const SOCKET_MESSAGES_PATH = import.meta.env.VITE_SOCKET_MESSAGES_BASE_PATH;
+export const SOCKET_ROOM_PATH = import.meta.env.VITE_SOCKET_ROOMS_BASE_PATH;
 
 export const baseApi = axios.create({
     baseURL: BASE_API_URL,

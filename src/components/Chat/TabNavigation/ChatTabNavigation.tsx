@@ -17,6 +17,11 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { SOCKET_BASE_URL, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
+import { queryClient } from '@/App';
+import { io } from 'socket.io-client';
+
+
 
 
 interface ChatTabNavigationProps {
@@ -154,6 +159,42 @@ const ChatTabNavigation: React.FC<ChatTabNavigationProps> = ({ setCurrentRoom, r
                 return false;
         }
     });
+    const updateRoom = async () => {
+        const res: SingleRoom = await getRoomDetail(room.room.id)
+        setCurrentRoom(res)
+    }
+    useEffect(() => {
+        if (authCtx?.token) {
+            const socket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                }
+            })
+            socket.connect()
+            socket.on('joinRoom', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('sentInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('acceptInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('sentInvitationRequest', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('acceptRequest', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('rejectInvitation', () => {
+                queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
+            });
+            socket.on('blockUnblockMember', () => {
+                updateRoom()
+            });
+
+        }
+    }, [authCtx])
 
     return (
         <React.Fragment>
@@ -241,12 +282,19 @@ const ChatTabNavigation: React.FC<ChatTabNavigationProps> = ({ setCurrentRoom, r
                                             {item.lastMessage?.createdAt && formatTime(item.lastMessage.createdAt)}
                                         </div>
                                     </div>
+
                                     <div className="flex justify-between">
                                         <div className='text-sm pb-1'>{item.lastMessage?.message.slice(0, 40)}  {item.lastMessage?.message && item.lastMessage?.message.length > 40 && "... "}</div>
                                         <div className={`text-xs pb-1 ${item.unread === 0 ? "hidden" : ""} bg-primary p-1 px-2  rounded-full text-white`}>{item.unread}</div>
-                                        <div className={` ${((item.actions > 0 && room.room.adminId === authCtx?.user?.id) || item.unread < 1) ? "" : "hidden"} ${item?.actions > 0 ? "bg-yellow-500" : "hidden"} text-xs p-1 text-white px-2 rounded-full`}>
+                                        <div className={`text-xs p-1 text-white px-2 rounded-full ${item.adminId === authCtx?.user?.id && item.unread > 0 && item.actions > 0
+                                            ? "hidden"
+                                            : item.adminId === authCtx?.user?.id && item.actions > 0
+                                                ? "bg-yellow-500"
+                                                : "hidden"
+                                            }`}>
                                             {item.actions > 0 && item.actions}
                                         </div>
+
                                     </div>
                                 </div>
                             </div>

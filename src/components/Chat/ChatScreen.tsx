@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { initialRoom } from '@/components/Chat/Home'
 import { ReadMessageIcon } from "@/assets/ReadMessage"
+import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL, SOCKET_MESSAGES_PATH } from '@/apis/apiHelper';
 
 interface ChatRoomInterfaceProps {
     room: SingleRoom,
@@ -37,7 +39,6 @@ interface ChatRoomInterfaceProps {
     setCurrentRoom: (room: SingleRoom) => void
 
 }
-
 enum Action {
     update,
     delete,
@@ -46,8 +47,48 @@ enum Action {
 }
 
 const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab, setCurrentRoom }) => {
-    const queryClient = useQueryClient();
     const authCtx = useSelector((state: RootState) => state.authCtx);
+
+  
+    useEffect(() => {
+        if (authCtx?.token) {
+            const socket = io(SOCKET_BASE_URL + SOCKET_MESSAGES_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                }
+            })
+            socket.connect()
+
+            socket.on('unReadMessage', () => {
+                queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
+            });
+
+            socket.on('readMessages', () => {
+                queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages", room.room.id] });            // Handle the received message (e.g., update state)
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages"] });
+            });
+
+            socket.on('sendMessage', () => {
+                queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages", room.room.id] });            // Handle the received message (e.g., update state)
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages"] });
+            });
+
+            socket.on('receiveMessage', () => {
+                queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages", room.room.id] });
+                queryClient.invalidateQueries({ queryKey: ["RoomMessages"] });
+            });
+        }
+    }, [authCtx])
+
+
+    const queryClient = useQueryClient();
     const formRef = useRef<HTMLFormElement>(null);
     const chatContainerRef = useRef<HTMLDivElement | any>(null);
     const [emojiToggle, setEmojiToggle] = useState<boolean>(false);
@@ -192,6 +233,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
             queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
         }
     })
+
 
     const sendMessage = async (e: FormEvent) => {
         e.preventDefault();
@@ -430,6 +472,10 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
     }
     const RoomMessagesWitheEvents = addJoinAndLeaveMessages(room, RoomMessages?.results || []);
 
+
+
+
+
     if (authCtx && authCtx.user && authCtx.user.id)
         return (
             <div className="relative h-screen  flex flex-col">
@@ -576,14 +622,14 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                                                     </div>
                                                     <div className={` flex space-x-2 items-center ${item.sender.id === authCtx.user?.id ? "hidden" : ""} ${item.isSystemMessage && "hidden"}`}>
                                                         {formatTime(item.createdAt)}
-                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== item.sender.id as string).length<1&&"hidden"}`}>
+                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== item.sender.id as string).length < 1 && "hidden"}`}>
                                                             <DropdownMenu >
                                                                 <DropdownMenuTrigger className=' outline-none border-none'>
                                                                     <ReadMessageIcon width={20} height={18} color={"#2563eb"} />
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent className=' outline-none border-none'>
                                                                     {item.readMessageUser.filter(user => user.id !== item.sender.id as string).map((subItem) => {
-                                                                        return <DropdownMenuItem className= {`outline-none border-none`} key={subItem.id}>
+                                                                        return <DropdownMenuItem className={`outline-none border-none`} key={subItem.id}>
                                                                             <div className='flex items-center space-x-2'>
                                                                                 <div>
                                                                                     <img className='w-8 h-8 object-cover object-center rounded-full' src={subItem.img} alt={subItem.username} />
@@ -608,7 +654,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
 
                                                     <div className={` flex ${item.sender.id !== authCtx.user?.id ? "hidden" : ""} space-x-5 items-center justify-end m-2 mb-0 mt-1 text-xs text-gray-300   `}>
                                                         {formatTime(item.createdAt)}
-                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== authCtx?.user?.id as string).length<1&&"hidden"}`}>
+                                                        <div className={`ml-4 ${item.readMessageUser.filter(user => user.id !== authCtx?.user?.id as string).length < 1 && "hidden"}`}>
                                                             <DropdownMenu >
                                                                 <DropdownMenuTrigger className=' outline-none border-none'>
                                                                     <ReadMessageIcon width={20} height={18} color={"#fff"} />

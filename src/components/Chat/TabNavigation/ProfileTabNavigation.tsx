@@ -10,6 +10,7 @@ import { FaCamera } from "react-icons/fa";
 import { MdEdit } from 'react-icons/md'
 import { TiTick } from 'react-icons/ti'
 import { showGuideNotification, showSuccessNotification } from '@/utils/notifcation'
+import { getRoomDetail } from '@/apis/rooms.api'
 
 interface ProfileTabNavigationProps {
   room: SingleRoom
@@ -52,7 +53,7 @@ const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCu
       const res = await UpdateUser(id, updateUserDto);
       return res;
     },
-    onSuccess: () => {
+    onSuccess: async() => {
       if (authCtx && authCtx.user) {
         const newAuthCtx: Auth = {
           ...authCtx,
@@ -63,20 +64,7 @@ const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCu
             email: ProfileEdit.email || authCtx.user.email,
           },
         };
-        const newUser = {
-          ...authCtx.user,
-          name: ProfileEdit.name || authCtx.user.name,
-          username: ProfileEdit.username || authCtx.user.username,
-          email: ProfileEdit.email || authCtx.user.email,
-        }
-        const newRoom = {
-          room: room.room,
-          actions: room.actions,
-          users: room.users.map((user) =>
-            user.id === newUser.id ? newUser : user
-          ),
-          blockMembers:room.blockMembers
-        };
+        const newRoom: SingleRoom = await getRoomDetail(room.room.id)
         setCurrentRoom(newRoom)
         showSuccessNotification("Profile updated successfully")
         dispatch(login(newAuthCtx))
@@ -103,10 +91,7 @@ const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCu
       const newAuthCtx: Auth = { ...authCtx, user: updatedUser };
 
       // Update the room data
-      const newRoom = {
-        ...room,
-        users: room.users.map(user => user.id === updatedUser.id ? updatedUser : user)
-      };
+      const newRoom = await getRoomDetail(room.room.id)
 
       try {
         // Update the user profile on the server
@@ -156,7 +141,7 @@ const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCu
           style={{ display: "none" }}
         />
       </div>
-   
+
 
       <div className="flex flex-col p-4">
         <div className="font-normal text-lg mt-2 flex justify-between">
