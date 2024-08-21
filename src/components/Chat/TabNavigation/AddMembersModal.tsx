@@ -65,7 +65,6 @@ const AddMembersModal: React.FC<Modal> = ({ close, room }) => {
             const sendRequest: AddRoomsRequestDto[] = selectedValue.map((member) => ({
                 userId: member.id,
                 roomId: room.room.id,
-
             }));
             mutate.mutateAsync(sendRequest)
         } catch (error) {
