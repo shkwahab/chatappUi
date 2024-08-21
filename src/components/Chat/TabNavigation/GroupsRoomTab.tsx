@@ -18,15 +18,6 @@ interface GroupsRoomTabProps {
 const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) => {
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
-    const [acceptRequestDto, setAcceptRequestDto] = useState<AcceptRequestDto>({
-        roomId: "",
-        userId: ""
-    })
-    const [sendInvitationDto, setSendInvitationDto] = useState<SendInvitationDto>({
-        roomId: "",
-        userId: "",
-        isApproved: false
-    })
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [rooms, setRooms] = useState<Rooms>({
         count: 0,
@@ -136,7 +127,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
             console.error(error)
         }
     })
-    const acceptRequestCallback = async (e: FormEvent) => {
+    const acceptRequestCallback = async (e: FormEvent, acceptRequestDto: AcceptRequestDto) => {
         try {
             e.preventDefault()
             if (acceptRequestDto.roomId != "") {
@@ -312,18 +303,20 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                     isPendingMember ?
                                                         item.roomMemberships?.filter((member) => member.userId === authCtx.user?.id).map((member) => {
                                                             return <React.Fragment>
-                                                                <form className={` ${member.request === "INVITATION" || member.request === "NONE" ? "hidden" : ""} text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={acceptRequestCallback}>
-                                                                    <button onClick={() => {
-                                                                        setAcceptRequestDto({
-                                                                            roomId: member.roomId,
-                                                                            userId: member.userId
-                                                                        })
+                                                                <form className={` ${member.request === "INVITATION" || member.request === "NONE" ? "hidden" : ""} text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                    const acceptRequestDto = {
+                                                                        roomId: member.roomId,
+                                                                        userId: member.userId
+                                                                    }
+                                                                    acceptRequestCallback(e, acceptRequestDto)
+                                                                    revalidater()
 
-                                                                    }} type="submit" key={member.id}>
+                                                                }}>
+                                                                    <button disabled={acceptRequestMutate.isSuccess} type="submit" key={member.id}>
                                                                         {member.request === "REQUEST" ? `${acceptRequestMutate.isPending ? "Sending Request" : "Accept Request"}` : ""}
                                                                     </button>
                                                                 </form>
-                                                                <form className={` ${member.request === "NONE" ? "" : "hidden"} text-xs mx-auto w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-500"}  p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                <form className={` ${member.request === "NONE" ? "" : "hidden"} text-xs mx-auto w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-600"}  p-2 text-white rounded-md`} onSubmit={(e) => {
                                                                     const inviteDto = {
                                                                         isApproved: false,
                                                                         roomId: member.roomId,
@@ -332,15 +325,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                                     }
                                                                     sendInvitationCallback(e, inviteDto)
                                                                 }}>
-                                                                    <button onClick={() => {
-                                                                        const inviteDto = {
-                                                                            isApproved: false,
-                                                                            roomId: member.roomId,
-                                                                            userId: authCtx.user?.id as string,
-                                                                            room: member.role
-                                                                        }
-                                                                        setSendInvitationDto(inviteDto)
-                                                                    }} type="submit" key={member.id}>
+                                                                    <button disabled={sendInvitationMutate.isSuccess} type="submit" key={member.id}>
                                                                         {sendInvitationMutate.isPending && "Sending Invitation"}
                                                                         {sendInvitationMutate.isSuccess && "Invitation Sent"}
                                                                         {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Send Invitation"}
@@ -360,15 +345,8 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                                     userId: authCtx.user?.id as string
                                                                 }
                                                                 sendInvitationCallback(e, inviteDto)
-                                                            }} className={`text-xs w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-500"}  p-2 text-white rounded-md`}>
-                                                                <button type="submit" onClick={() => {
-                                                                    const inviteDto = {
-                                                                        isApproved: false,
-                                                                        roomId: item.id,
-                                                                        userId: authCtx.user?.id as string
-                                                                    }
-                                                                    setSendInvitationDto(inviteDto)
-                                                                }}>
+                                                            }} className={`text-xs w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-600"}  p-2 text-white rounded-md`}>
+                                                                <button disabled={sendInvitationMutate.isSuccess} type="submit">
                                                                     {sendInvitationMutate.isPending && "Sending Invitation"}
                                                                     {sendInvitationMutate.isSuccess && "Invitation Sent"}
                                                                     {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Send Invitation"}
