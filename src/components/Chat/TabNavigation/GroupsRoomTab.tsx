@@ -2,14 +2,15 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { IoMdSearch } from "react-icons/io";
 import { acceptRequest, getAllRooms, getNextRoomPage, getRoomDetail, sendInvitation } from '@/apis/rooms.api';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
 import { AcceptRequestDto, Rooms, SendInvitationDto, SingleRoom } from '@/apis/types';
 import { HiUserGroup } from "react-icons/hi";
 import { showErrorNotification } from '@/utils/notifcation';
 import { queryClient } from '@/App';
 import { SOCKET_BASE_URL, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
 import { io } from 'socket.io-client';
+import { setGroup } from '@/redux/slices/group-slice';
 
 interface GroupsRoomTabProps {
     room: SingleRoom
@@ -19,12 +20,11 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [rooms, setRooms] = useState<Rooms>({
-        count: 0,
-        next: null,
-        previous: null,
-        result: []
-    });
+    const groups = useSelector((state: RootState) => state.groups)
+    const dispatch = useDispatch<AppDispatch>()
+    const handleSelectGroup = (groups: Rooms) => {
+        dispatch(setGroup(groups))
+    }
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
     const roomsNextPageRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
 
     useEffect(() => {
         if (isSuccess && initialRooms) {
-            setRooms(initialRooms);
+            handleSelectGroup(initialRooms)
             setNextPageUrl(initialRooms.next);
         }
     }, [initialRooms, isSuccess]);
@@ -44,13 +44,14 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
         if (nextPageUrl) {
             try {
                 const nextRoom: Rooms = await getNextRoomPage(nextPageUrl);
-                setRooms(prevRooms => ({
-                    ...prevRooms,
-                    result: [...prevRooms.result, ...nextRoom.result],
+                const newGroups: Rooms = {
+                    result: [...groups.result, ...nextRoom.result],
                     next: nextRoom.next,
-                    count: prevRooms.count + nextRoom.count,
+                    count: groups.count,
                     previous: nextRoom.previous
-                }));
+                };
+
+                handleSelectGroup(newGroups)
                 setNextPageUrl(nextRoom.next);
             } catch (err) {
                 console.error("Failed to fetch next rooms:", err);
@@ -109,7 +110,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
     };
 
 
-    const filteredRooms = rooms.result.filter((room) => {
+    const filteredRooms = groups.result.filter((room) => {
         if (searchQuery) {
             return room.name.toLowerCase().includes(searchQuery.toLowerCase());
         }
@@ -190,7 +191,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                 fetchedRooms.next = roomsData.next;
                 fetchedRooms.previous = roomsData.previous;
             }
-            setRooms(fetchedRooms)
+            handleSelectGroup(fetchedRooms)
         }
     }
 
@@ -218,7 +219,8 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                 'acceptInvitation',
                 'sentInvitationRequest',
                 'acceptRequest',
-                'rejectInvitation'
+                'rejectInvitation',
+                'leaveRoom'
             ];
 
             events.forEach(event => {

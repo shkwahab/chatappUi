@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, {  useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { signOut } from '@/redux/slices/auth-slice';
-import { HomeProps, SingleRoom, Widgets } from '@/apis/types';
+import { HomeProps,  SingleRoom, Widgets } from '@/apis/types';
 import { MdOutlineChat } from "react-icons/md";
 import { FaRegUserCircle } from "react-icons/fa";
 import { MdChatBubbleOutline } from "react-icons/md";
@@ -159,6 +159,8 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     setCurrentRoom(room)
   }
 
+
+ 
   return (
     <React.Fragment>
       <aside id="navigation-sidebar" className={`fixed bottom-0 md:top-0 left-0 z-[100] w-full md:w-16 md:h-screen transition-transform md:translate-x-0 ${currentRoom.room.id != "" ? "hidden md:block" : ""}`} aria-label="Sidebar">

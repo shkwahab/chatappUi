@@ -2,16 +2,18 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import authSlice from "@/redux/slices/auth-slice";
+import groupSlice from "@/redux/slices/group-slice";
 
 
 const rootReducer = combineReducers({
     authCtx: authSlice,
+    groups: groupSlice
 });
 
 const persistConfig = {
     key: 'root',
     storage,
-    whitelist: ['authCtx']
+    whitelist: ['authCtx','groups']
 }
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 
