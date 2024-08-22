@@ -200,7 +200,9 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
             const socket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
                 extraHeaders: {
                     Authorization: `Bearer ${authCtx?.token as string}`
-                }
+                },
+                autoConnect: true,
+                reconnection: true
             });
             socket.connect();
 
@@ -305,7 +307,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                     isPendingMember ?
                                                         item.roomMemberships?.filter((member) => member.userId === authCtx.user?.id).map((member) => {
                                                             return <React.Fragment>
-                                                                <form className={` ${member.request === "INVITATION" || member.request === "NONE" ? "hidden" : ""} text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                <form className={` ${member.request === "INVITATION" || member.request === "NONE" ? "hidden" : ""} flex justify-center items-center text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={(e) => {
                                                                     const acceptRequestDto = {
                                                                         roomId: member.roomId,
                                                                         userId: member.userId
@@ -318,7 +320,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                                         {member.request === "REQUEST" ? `${acceptRequestMutate.isPending ? "Sending Request" : "Accept Request"}` : ""}
                                                                     </button>
                                                                 </form>
-                                                                <form className={` ${member.request === "NONE" ? "" : "hidden"} text-xs mx-auto w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-600"}  p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                <form className={` ${member.request === "NONE" ? "" : "hidden"} flex justify-center items-center text-xs mx-auto w-8/12  ${!sendInvitationMutate.isSuccess ? "bg-primary cursor-pointer" : " bg-green-600"}  p-2 text-white rounded-md`} onSubmit={(e) => {
                                                                     const inviteDto = {
                                                                         isApproved: false,
                                                                         roomId: member.roomId,
@@ -333,7 +335,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                                         {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Send Invitation"}
                                                                     </button>
                                                                 </form>
-                                                                <div className={`${member.request === "INVITATION" ? "" : "hidden"} text-xs w-8/12  bg-green-600 p-2 text-white rounded-md`}>
+                                                                <div className={`${member.request === "INVITATION" ? "" : "hidden"} flex justify-center items-center text-xs w-8/12  bg-green-600 p-2 text-white rounded-md`}>
                                                                     Invitation Sent
                                                                 </div>
                                                             </React.Fragment>
@@ -347,7 +349,7 @@ const GroupsRoomTab: React.FC<GroupsRoomTabProps> = ({ room, setCurrentRoom }) =
                                                                     userId: authCtx.user?.id as string
                                                                 }
                                                                 sendInvitationCallback(e, inviteDto)
-                                                            }} className={`text-xs w-8/12 cursor-pointer ${!sendInvitationMutate.isSuccess ? "bg-primary" : " bg-green-600"}  p-2 text-white rounded-md`}>
+                                                            }} className={`text-xs w-8/12 flex justify-center items-center  ${!sendInvitationMutate.isSuccess ? "bg-primary cursor-pointer" : " bg-green-600"}  p-2 text-white rounded-md`}>
                                                                 <button disabled={sendInvitationMutate.isSuccess} type="submit">
                                                                     {sendInvitationMutate.isPending && "Sending Invitation"}
                                                                     {sendInvitationMutate.isSuccess && "Invitation Sent"}

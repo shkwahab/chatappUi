@@ -1,10 +1,12 @@
-import React, { FormEvent, useRef } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { EditMessageDto, MessageSender, RoomsMessages, SingleRoom } from '@/apis/types';
 import { useMutation } from '@tanstack/react-query';
 import { EditMessage } from '@/apis/message.api';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { queryClient } from '@/App';
+import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL, SOCKET_MESSAGES_PATH } from '@/apis/apiHelper';
 
 interface EditProps {
     message: {
@@ -16,13 +18,41 @@ interface EditProps {
         receiver?: MessageSender;
     },
     onClose: () => void
-    room:SingleRoom
+    room: SingleRoom
 }
 
-const EditModal: React.FC<EditProps> = ({ message, onClose,room }) => {
+const EditModal: React.FC<EditProps> = ({ message, onClose, room }) => {
     const authCtx = useSelector((state: RootState) => state.authCtx);
     const formRef = useRef<HTMLFormElement>(null);
-    
+    const [editMessageSocket, setEditMessageSocket] = useState<EditMessageDto>()
+    useEffect(() => {
+        if (authCtx && editMessageSocket) {
+            const socket = io(SOCKET_BASE_URL + SOCKET_MESSAGES_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                },
+                autoConnect: true,
+                reconnection: true
+            })
+            socket.connect()
+
+            socket.on('editMessage', () => {
+                queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+                queryClient.invalidateQueries({ queryKey: ["AllRooms"] });
+                queryClient.setQueryData<RoomsMessages>(["RoomMessages", room.room.id], (oldData) => {
+                    if (!oldData) {
+                        return oldData
+                    };
+                    return {
+                        ...oldData,
+                        results: oldData.results.map((item) =>
+                            item.id === editMessageSocket.messageId ? { ...item, ...editMessageSocket } : item
+                        ),
+                    };
+                });
+            });
+        }
+    }, [authCtx, editMessageSocket])
     const mutate = useMutation({
         mutationKey: ["editMessage", message.id],
         mutationFn: EditMessage,
@@ -30,7 +60,7 @@ const EditModal: React.FC<EditProps> = ({ message, onClose,room }) => {
             if (room.room.id != "") {
                 queryClient.setQueryData<RoomsMessages>(["RoomMessages", room.room.id], (oldData) => {
                     if (!oldData) return oldData;
-
+                  
                     return {
                         ...oldData,
                         results: oldData.results.map((item) =>
@@ -38,8 +68,8 @@ const EditModal: React.FC<EditProps> = ({ message, onClose,room }) => {
                         ),
                     };
                 });
-
                 queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+
             }
             onClose();
         }
@@ -57,8 +87,10 @@ const EditModal: React.FC<EditProps> = ({ message, onClose,room }) => {
                 const body: EditMessageDto = {
                     message: msg,
                     messageId: message.id,
-                    userId: authCtx.user?.id
+                    userId: authCtx.user?.id,
+                    roomId: room.room.id
                 };
+                setEditMessageSocket(body)
                 mutate.mutateAsync(body);
             }
         } catch (error) {

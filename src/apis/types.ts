@@ -121,7 +121,7 @@ export interface Rooms {
 export interface Option {
     id: string;
     username: string;
-    role?:"ADMIN"|"USER"
+    role?: "ADMIN" | "USER"
 }
 
 
@@ -225,6 +225,7 @@ export interface EditMessageDto {
     messageId: string
     userId: string
     message: string
+    roomId: string
 }
 
 export interface DeleteMessageDto {

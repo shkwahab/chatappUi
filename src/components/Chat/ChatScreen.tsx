@@ -31,7 +31,7 @@ import {
 import { initialRoom } from '@/components/Chat/Home'
 import { ReadMessageIcon } from "@/assets/ReadMessage"
 import { io } from 'socket.io-client';
-import { SOCKET_BASE_URL, SOCKET_MESSAGES_PATH } from '@/apis/apiHelper';
+import { SOCKET_BASE_URL, SOCKET_MESSAGES_PATH, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
 
 interface ChatRoomInterfaceProps {
     room: SingleRoom,
@@ -49,13 +49,18 @@ enum Action {
 const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab, setCurrentRoom }) => {
     const authCtx = useSelector((state: RootState) => state.authCtx);
 
-  
+    const revalidateRoom = async () => {
+        const currentRoom: SingleRoom = await getRoomDetail(room.room.id)
+        setCurrentRoom(currentRoom)
+    }
     useEffect(() => {
         if (authCtx?.token) {
             const socket = io(SOCKET_BASE_URL + SOCKET_MESSAGES_PATH, {
                 extraHeaders: {
                     Authorization: `Bearer ${authCtx?.token as string}`
-                }
+                },
+                autoConnect: true,
+                reconnection: true
             })
             socket.connect()
 
@@ -84,6 +89,37 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                 queryClient.invalidateQueries({ queryKey: ["RoomMessages", room.room.id] });
                 queryClient.invalidateQueries({ queryKey: ["RoomMessages"] });
             });
+
+            const roomsocket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
+                extraHeaders: {
+                    Authorization: `Bearer ${authCtx?.token as string}`
+                }
+            });
+            socket.connect();
+
+            // General event handler function
+            const handleSocketEvent = (message?: any) => {
+                if (message) {
+                    console.log(message);
+                }
+                revalidateRoom()
+            };
+
+            // Array of event names that need to trigger the same logic
+            const events = [
+                'joinRoom',
+                'sentInvitation',
+                'acceptInvitation',
+                'sentInvitationRequest',
+                'acceptRequest',
+                'rejectInvitation',
+                'leaveRoom'
+            ];
+
+            events.forEach(event => {
+                roomsocket.on(event, handleSocketEvent);
+            });
+
         }
     }, [authCtx])
 
@@ -230,7 +266,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
         mutationFn: ReadMessages,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["RoomMessages", room.room.id] });
-            queryClient.invalidateQueries({ queryKey: ['UserRooms'] });
+            queryClient.invalidateQueries({ queryKey: ['UserRooms', authCtx?.user?.id] });
         }
     })
 
