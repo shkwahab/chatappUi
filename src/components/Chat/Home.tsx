@@ -136,22 +136,22 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     {
       id: 1,
       name: "profile",
-      icon: <FaRegUserCircle className={`${activeTab === 1 ? "text-primary" : "text-gray-400"}  md:text-3xl  text-3xl  font-semibold`} />
+      icon: <FaRegUserCircle className={`${activeTab === 1 ? "text-primary" : "text-gray-400"}  md:text-3xl  text-2xl  font-semibold`} />
     },
     {
       id: 2,
       name: "chats",
-      icon: <MdChatBubbleOutline className={`${activeTab === 2 ? "text-primary" : "text-gray-400"} text-3xl  md:text-3xl   font-semibold`} />
+      icon: <MdChatBubbleOutline className={`${activeTab === 2 ? "text-primary" : "text-gray-400"} text-2xl  md:text-3xl   font-semibold`} />
     },
     {
       id: 3,
       name: "groups",
-      icon: <HiUserGroup className={`${activeTab === 3 ? "text-primary" : "text-gray-400"} md:text-3xl  text-3xl  font-semibold`} />
+      icon: <HiUserGroup className={`${activeTab === 3 ? "text-primary" : "text-gray-400"} md:text-3xl  text-2xl  font-semibold`} />
     },
     {
       id: 4,
       name: "channels",
-      icon: <TbSocial className={` ${activeTab === 4 ? "text-primary" : "text-gray-400"} md:text-3xl  text-3xl  font-semibold`} />
+      icon: <TbSocial className={` ${activeTab === 4 ? "text-primary" : "text-gray-400"} md:text-3xl  text-2xl  font-semibold`} />
     }
   ]
 
