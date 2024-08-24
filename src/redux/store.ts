@@ -3,6 +3,7 @@ import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import authSlice from "@/redux/slices/auth-slice";
 import groupSlice from "@/redux/slices/group-slice";
+import sessionExpiry from "@/redux/sessionExpiry";
 
 
 const rootReducer = combineReducers({
@@ -19,7 +20,7 @@ const persistedReducer = persistReducer(persistConfig, rootReducer)
 
 const store = configureStore({
     reducer: persistedReducer,
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware()
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sessionExpiry)
 })
 
 export default store
