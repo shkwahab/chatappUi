@@ -9,7 +9,7 @@ import { login } from "@/redux/slices/auth-slice"
 import { FaCamera } from "react-icons/fa";
 import { MdEdit } from 'react-icons/md'
 import { TiTick } from 'react-icons/ti'
-import { showGuideNotification, showSuccessNotification } from '@/utils/notifcation'
+import { showErrorNotification, showGuideNotification, showSuccessNotification } from '@/utils/notifcation'
 import { getRoomDetail } from '@/apis/rooms.api'
 
 interface ProfileTabNavigationProps {
@@ -109,6 +109,7 @@ const ProfileTabNavigation: React.FC<ProfileTabNavigationProps> = ({ room, setCu
       }
     },
     onError: (error) => {
+      showErrorNotification("Image should be lower than 500 kb.")
       console.error("Failed to upload image:", error);
     },
   });
