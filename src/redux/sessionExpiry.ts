@@ -18,7 +18,7 @@ const sessionExpiry: Middleware = (store) => (next) => (action) => {
                     const refreshToken = localStorage.getItem('refreshToken');
                     if (!refreshToken) {
                         store.dispatch(signOut());
-                        window.location.href = "/signin";
+                        window.location.href = "/login";
                         return Promise.reject(error);
                     }
 
@@ -38,14 +38,14 @@ const sessionExpiry: Middleware = (store) => (next) => (action) => {
                     return baseApi(originalRequest);
                 } catch (refreshError) {
                     store.dispatch(signOut());
-                    window.location.href = "/signin";
+                    window.location.href = "/login";
                     return Promise.reject(refreshError);
                 }
             }
 
             if (error.response?.status === 401) {
                 store.dispatch(signOut());
-                window.location.href = "/signin";
+                window.location.href = "/login";
             }
 
             return Promise.reject(error);
