@@ -40,12 +40,7 @@ VITE_SOCKET_ROOMS_BASE_PATH       =    "/rooms"
 
 ```
 
-4. Install Dependencies:
-```bash
-pnpm i
-```
-
-5. Start the application:
+4. Start the application:
 
 Dev Environment:
 
