@@ -514,6 +514,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
 
     if (authCtx && authCtx.user && authCtx.user.id)
         return (
+
             <div className="relative h-screen  flex flex-col">
                 <div className="bg-gray-700 p-4 text-white">
                     <div className=" flex  justify-between items-center space-x-4">
@@ -774,7 +775,7 @@ const ChatScreen: React.FC<ChatRoomInterfaceProps> = ({ room, openRoomDetailTab,
                     </div>
                 </div>
 
-                <form ref={formRef} onSubmit={sendMessage} className='absolute bg-gray-700  bottom-0 p-4 w-full'>
+                <form ref={formRef} onSubmit={sendMessage} className='fixed md:absolute bg-gray-700  bottom-0 p-4 w-full'>
 
                     {room.room.deletedAt !== null ?
                         <React.Fragment>
