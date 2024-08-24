@@ -63,3 +63,8 @@ Here is the Backend App Github Repo visit: [Backend App](https://github.com/shkw
 
 - **Public Channels**: Channels where anyone can join and chat.
 - **Private Groups**: Groups where only authorized members can join.
+
+
+### App Preview
+
+<img src="/public//assets/preview.png">
