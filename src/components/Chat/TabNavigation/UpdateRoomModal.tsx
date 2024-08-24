@@ -76,7 +76,8 @@ const UpdateRoomModal: React.FC<UpdateRoomProps> = ({ onClose, room, setCurrentR
         room: res,
         users: room.users,
         actions: [],
-        blockMembers:room.blockMembers
+        oldUsers:room.oldUsers,
+        blockMembers: room.blockMembers
       }
       setCurrentRoom(newRoom)
       showSuccessNotification("Room Updated Successfully")
