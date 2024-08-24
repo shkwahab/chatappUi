@@ -17,7 +17,7 @@ const index: React.FC<ActiveTabInfo> = ({ activeTab, setCurrentRoom, room }) => 
         case 1:
             return (
                 <React.Fragment>
-                    <ProfileTabNavigation room={room} setCurrentRoom={setCurrentRoom} />
+                    <ProfileTabNavigation  />
                 </React.Fragment>
             )
         case 2:
