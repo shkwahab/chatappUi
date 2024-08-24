@@ -67,12 +67,12 @@ Here is the Backend App Github Repo visit: [Backend App](https://github.com/shkw
 
 ### App Preview
 
+<img src="/public/assets/preview/login.png">
+<img src="/public/assets/preview/register.png">
 <img src="/public/assets/preview/preview.png">
 <img src="/public/assets/preview/addChatRoom.png">
 <img src="/public/assets/preview/roomDetail.png">
 <img src="/public/assets/preview/profiletTab.png">
-<img src="/public/assets/preview/login.png">
-<img src="/public/assets/preview/register.png">
 <img src="/public/assets/preview/roomDetailAdminPopup.png">
 <img src="/public/assets/preview/sendInvitation.png">
 <img src="/public/assets/preview/updateChatRoom.png">
