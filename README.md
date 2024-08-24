@@ -34,7 +34,7 @@ A real-time chat application built with React.js (Vite), TailwindCSS, TanStack Q
 
 
 VITE_BASE_URL                     =    "https://apichat.chickenkiller.com"
-VITE_SOCKET_BASE_URL              =    "http://localhost:5000"
+VITE_SOCKET_BASE_URL              =    "https://socketchat.chickenkiller.com"
 VITE_SOCKET_MESSAGES_BASE_PATH    =    "/messages"
 VITE_SOCKET_ROOMS_BASE_PATH       =    "/rooms"
 
