@@ -2,14 +2,15 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { IoMdSearch } from "react-icons/io";
 import { acceptRequest, getAllRooms, getNextRoomPage, getRoomDetail, sendInvitation } from '@/apis/rooms.api';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
 import { AcceptRequestDto, Rooms, SendInvitationDto, SingleRoom } from '@/apis/types';
-import { HiUserGroup } from "react-icons/hi";
 import { showErrorNotification } from '@/utils/notifcation';
 import { queryClient } from '@/App';
-import { io } from 'socket.io-client';
 import { SOCKET_BASE_URL, SOCKET_ROOM_PATH } from '@/apis/apiHelper';
+import { io } from 'socket.io-client';
+import { TbSocial } from "react-icons/tb";
+import { setGroup } from '@/redux/slices/group-slice';
 
 interface ChannelRoomTabProps {
     room: SingleRoom
@@ -18,38 +19,23 @@ interface ChannelRoomTabProps {
 const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom }) => {
     const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
     const authCtx = useSelector((state: RootState) => state.authCtx);
-    const [acceptRequestDto, setAcceptRequestDto] = useState<AcceptRequestDto>({
-        roomId: "",
-        userId: ""
-    })
-
-    const [sendInvitationDto, setSendInvitationDto] = useState<SendInvitationDto>({
-        roomId: "",
-        userId: "",
-        isApproved: false
-    })
-
     const [searchQuery, setSearchQuery] = useState<string>('');
-
-    const [rooms, setRooms] = useState<Rooms>({
-        count: 0,
-        next: null,
-        previous: null,
-        result: []
-    });
+    const groups = useSelector((state: RootState) => state.groups)
+    const dispatch = useDispatch<AppDispatch>()
+    const handleSelectChannel = (groups: Rooms) => {
+        dispatch(setGroup(groups))
+    }
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
     const roomsNextPageRef = useRef<HTMLDivElement>(null);
 
-    // const id = authCtx?.user?.id;
-
     const { data: initialRooms, isSuccess, isError, error } = useQuery<Rooms>({
-        queryKey: ["AllRooms"],
+        queryKey: ["AllChannels"],
         queryFn: getAllRooms
     });
 
     useEffect(() => {
         if (isSuccess && initialRooms) {
-            setRooms(initialRooms);
+            handleSelectChannel(initialRooms)
             setNextPageUrl(initialRooms.next);
         }
     }, [initialRooms, isSuccess]);
@@ -57,12 +43,15 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
     const fetchNextPage = async () => {
         if (nextPageUrl) {
             try {
-                const nextRoom = await getNextRoomPage(nextPageUrl);
-                setRooms(prevRooms => ({
-                    ...prevRooms,
-                    result: [...prevRooms.result, ...nextRoom.result],
+                const nextRoom: Rooms = await getNextRoomPage(nextPageUrl);
+                const newGroups: Rooms = {
+                    result: [...groups.result, ...nextRoom.result],
                     next: nextRoom.next,
-                }));
+                    count: groups.count,
+                    previous: nextRoom.previous
+                };
+
+                handleSelectChannel(newGroups)
                 setNextPageUrl(nextRoom.next);
             } catch (err) {
                 console.error("Failed to fetch next rooms:", err);
@@ -108,7 +97,6 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
     useEffect(() => {
         if (roomData)
             setCurrentRoom(roomData)
-        // dispatch(handleSelectRoom(roomData))
     }, [roomData])
 
 
@@ -122,7 +110,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
     };
 
 
-    const filteredRooms = rooms.result.filter((room) => {
+    const filteredRooms = groups.result.filter((room) => {
         if (searchQuery) {
             return room.name.toLowerCase().includes(searchQuery.toLowerCase());
         }
@@ -132,7 +120,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
         mutationKey: ["acceptRequest"],
         mutationFn: acceptRequest,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+            queryClient.invalidateQueries({ queryKey: ["AllChannels"] })
             queryClient.invalidateQueries({ queryKey: ["UserRooms"] })
         },
         onError: (error) => {
@@ -140,7 +128,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
             console.error(error)
         }
     })
-    const acceptRequestCallback = async (e: FormEvent) => {
+    const acceptRequestCallback = async (e: FormEvent, acceptRequestDto: AcceptRequestDto) => {
         try {
             e.preventDefault()
             if (acceptRequestDto.roomId != "") {
@@ -156,12 +144,11 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
     }
 
 
-
     const sendInvitationMutate = useMutation({
         mutationKey: ["sendInvitation"],
         mutationFn: sendInvitation,
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["AllChannels"] })
         },
         onError: (error) => {
             showErrorNotification("Failed to send invite. Something went wrong.")
@@ -169,7 +156,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
         }
     })
 
-    const sendInvitationCallback = async (e: FormEvent) => {
+    const sendInvitationCallback = async (e: FormEvent, sendInvitationDto: SendInvitationDto) => {
         try {
             e.preventDefault()
             if (sendInvitationDto.roomId != "") {
@@ -182,37 +169,70 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
         }
     }
 
+
+
+    const revalidater = async () => {
+        // @ts-ignore
+        const initialRooms: Rooms = await getAllRooms()
+        if (initialRooms) {
+            const pagenumber = Math.ceil(initialRooms?.count / 10);
+            const fetchedRooms: Rooms = {
+                count: 0,
+                next: null,
+                previous: null,
+                result: []
+            };
+            // Concatenate results from each page
+            for (let page = 1; page <= pagenumber; page++) {
+                const roomsData: Rooms = await getNextRoomPage(`/rooms?page=${page}`);
+                // @ts-ignore
+                fetchedRooms.result.push(...roomsData.result);
+                fetchedRooms.count = roomsData.count;
+                fetchedRooms.next = roomsData.next;
+                fetchedRooms.previous = roomsData.previous;
+            }
+            handleSelectChannel(fetchedRooms)
+        }
+    }
+
     useEffect(() => {
         if (authCtx?.token) {
             const socket = io(SOCKET_BASE_URL + SOCKET_ROOM_PATH, {
                 extraHeaders: {
                     Authorization: `Bearer ${authCtx?.token as string}`
+                },
+                autoConnect: true,
+                reconnection: true
+            });
+            socket.connect();
+
+            // General event handler function
+            const handleSocketEvent = (message?: any) => {
+                if (message) {
+                    console.log(message);
                 }
-            })
-            socket.connect()
-            socket.on('joinRoom', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
+                revalidater()
+            };
+
+            // Array of event names that need to trigger the same logic
+            const events = [
+                'joinRoom',
+                'sentInvitation',
+                'acceptInvitation',
+                'sentInvitationRequest',
+                'acceptRequest',
+                'rejectInvitation',
+                'leaveRoom'
+            ];
+
+            events.forEach(event => {
+                socket.on(event, handleSocketEvent);
             });
-            socket.on('sentInvitation', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
-            socket.on('acceptInvitation', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
-            socket.on('sentInvitationRequest', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
-            socket.on('acceptRequest', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
-            socket.on('rejectInvitation', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
-            socket.on('blockUnblockMember', () => {
-                queryClient.invalidateQueries({ queryKey: ["AllRooms"] })
-            });
+
+
         }
-    }, [authCtx])
+    }, [authCtx, queryClient]);
+
     if (authCtx && authCtx.user && authCtx.user.id)
         return (
             <React.Fragment>
@@ -236,6 +256,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
                         </div>
                     </div>
 
+
                     <div className='my-4  py-2 flex space-y-4 flex-col'>
                         {filteredRooms.map((item) => {
                             const isMemberShip = item.roomMemberships?.some(membership =>
@@ -245,6 +266,8 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
                                 const isMatch = (member.userId === authCtx.user?.id) && member.isApproved === false;
                                 return isMatch;
                             });
+
+
 
                             return <div onClick={() => {
                                 if (isMemberShip) {
@@ -256,7 +279,7 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
                                     <div>
                                         {!(item.img.includes("http")) &&
                                             (
-                                                <HiUserGroup className={`p-2  text-4xl rounded-full ${room.room.id === item.id ? "bg-white text-black" : "bg-gray-300"}`} />
+                                                <TbSocial className={`p-2  text-4xl rounded-full ${room.room.id === item.id ? "bg-white text-black" : "bg-gray-300"}`} />
                                             )
                                         }
                                         {item.img !== "" &&
@@ -284,36 +307,58 @@ const ChannelRoomTab: React.FC<ChannelRoomTabProps> = ({ room, setCurrentRoom })
                                                     isPendingMember ?
                                                         item.roomMemberships?.filter((member) => member.userId === authCtx.user?.id).map((member) => {
                                                             return <React.Fragment>
-                                                                <form className={` ${member.request === "INVITATION" ? "hidden" : ""} text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={acceptRequestCallback}>
-                                                                    <button onClick={() => {
-                                                                        setAcceptRequestDto({
-                                                                            roomId: member.roomId,
-                                                                            userId: member.userId
-                                                                        })
+                                                                <form className={` ${member.request === "INVITATION" || member.request === "NONE" ? "hidden" : ""} flex justify-center items-center text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                    const acceptRequestDto = {
+                                                                        roomId: member.roomId,
+                                                                        userId: member.userId
+                                                                    }
+                                                                    acceptRequestCallback(e, acceptRequestDto)
+                                                                    revalidater()
 
-                                                                    }} type="submit" key={member.id}>
+                                                                }}>
+                                                                    <button disabled={acceptRequestMutate.isSuccess} type="submit" key={member.id}>
                                                                         {member.request === "REQUEST" ? `${acceptRequestMutate.isPending ? "Sending Request" : "Accept Request"}` : ""}
                                                                     </button>
                                                                 </form>
-                                                                <div className={`${member.request === "INVITATION" ? "" : "hidden"} text-xs w-8/12  bg-green-600 p-2 text-white rounded-md`}>
-                                                                    Invitation Sent
+                                                                <form className={` ${member.request === "NONE" ? "" : "hidden"} flex justify-center items-center text-xs mx-auto w-8/12  ${!sendInvitationMutate.isSuccess ? "bg-primary cursor-pointer" : " bg-green-600"}  p-2 text-white rounded-md`} onSubmit={(e) => {
+                                                                    const inviteDto = {
+                                                                        isApproved: true,
+                                                                        roomId: member.roomId,
+                                                                        userId: authCtx.user?.id as string,
+                                                                        room: member.role
+                                                                    }
+                                                                    sendInvitationCallback(e, inviteDto)
+                                                                }}>
+                                                                    <button disabled={sendInvitationMutate.isSuccess} type="submit" key={member.id}>
+                                                                        {sendInvitationMutate.isPending && "Joining"}
+                                                                        {sendInvitationMutate.isSuccess && "Joined"}
+                                                                        {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Join Room"}
+                                                                    </button>
+                                                                </form>
+                                                                <div className={`${member.request === "INVITATION" ? "" : "hidden"} flex justify-center items-center text-xs w-8/12  bg-green-600 p-2 text-white rounded-md`}>
+                                                                    Joined
                                                                 </div>
                                                             </React.Fragment>
                                                         })
                                                         :
-                                                        <form onSubmit={sendInvitationCallback} className="text-xs w-8/12 cursor-pointer bg-primary p-2 text-white rounded-md">
-                                                            <button type="submit" onClick={() => {
-                                                                setSendInvitationDto({
-                                                                    isApproved: false,
+                                                        <React.Fragment>
+                                                            <form onSubmit={(e) => {
+                                                                const inviteDto = {
+                                                                    isApproved: true,
                                                                     roomId: item.id,
                                                                     userId: authCtx.user?.id as string
-                                                                })
-                                                            }}>
-                                                                {sendInvitationMutate.isPending && "Joining"}
-                                                                {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Join Room"}
-                                                            </button>
-                                                        </form>
+                                                                }
+                                                                sendInvitationCallback(e, inviteDto)
+                                                            }} className={`text-xs w-8/12 flex justify-center items-center  ${!sendInvitationMutate.isSuccess ? "bg-primary cursor-pointer" : " bg-green-600"}  p-2 text-white rounded-md`}>
+                                                                <button disabled={sendInvitationMutate.isSuccess} type="submit">
+                                                                    {sendInvitationMutate.isPending && "Joining"}
+                                                                    {sendInvitationMutate.isSuccess && "Joined"}
+                                                                    {!(sendInvitationMutate.isSuccess || sendInvitationMutate.isPending) && "Join Room"}
 
+                                                                </button>
+                                                            </form>
+
+                                                        </React.Fragment>
                                                 }
                                             </React.Fragment>
                                         }
