@@ -1,21 +1,25 @@
-// service-worker.js
 self.addEventListener('push', (event) => {
-    const data = event.data?.json();
-    const title = data?.title || 'New Notification';
-    const options = {
-        body: data?.body || 'You have a new message!',
-        icon: '/logo.png',
-        data: data?.url || '/',
-    };
-    
-    event.waitUntil(
-        self.registration.showNotification(title, options)
-    );
-});
+    console.log('Push event received:', event);
 
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow(event.notification.data)
-    );
+    if (event.data) {
+        console.log('Push data:', event.data.text()); // or .json() if JSON
+        event.data.json().then(data => {
+            const title = data?.title || 'New Notification';
+            const options = {
+                body: data?.body || 'You have a new message!',
+                icon: '/favicon.svg',
+                data: data?.url || '/',
+            };
+            
+            event.waitUntil(
+                self.registration.showNotification(title, options).catch(error => {
+                    console.error('Error showing notification:', error);
+                })
+            );
+        }).catch(error => {
+            console.error('Error parsing push data:', error);
+        });
+    } else {
+        console.error('No data found in push event');
+    }
 });
