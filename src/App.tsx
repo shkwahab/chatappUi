@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import Routing from "@/routes/Routing"
 import { PersistGate } from 'redux-persist/integration/react'
 import { Provider } from "react-redux"
@@ -12,6 +12,18 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export const queryClient = new QueryClient({})
 const App = () => {
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
   return (
 
     <React.Fragment>
